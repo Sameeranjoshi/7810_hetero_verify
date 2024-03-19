@@ -8,6 +8,7 @@
 // Producer - GPU-thread-1
 // Consumer - GPU-thread-2
 
+// much cleaner removed the non in unified memory checks.
 #include <cuda/atomic>
 #include <cstdio>
 
@@ -31,20 +32,11 @@ int main(int argc, char* argv[]) {
     int* data;
     int* result;
 
-    int data_in_unified_memory = 1;
-
     ////////////////////////////////////////////////////////////////////////////
 
     // Flag in unified memory
     SAFE(cudaMallocManaged(&flag, sizeof(atomic<int>)));
-
-    // Data placed as specified
-    if (data_in_unified_memory) {
-        SAFE(cudaMallocManaged(&data, sizeof(int)));
-    } else {
-        SAFE(cudaMalloc(&data, sizeof(int)));
-    }
-
+    SAFE(cudaMallocManaged(&data, sizeof(int)));
     // Result array pinned in CPU memory
     SAFE(cudaMallocHost(&result, sizeof(int)));
 
@@ -52,22 +44,11 @@ int main(int argc, char* argv[]) {
     flag->store(0, memory_order_relaxed);
 
     ////////////////////////////////////////////////////////////////////////////
-
-    // Transfer data is not in unified memory
-    // Can comment if necessary
-    if (!data_in_unified_memory){   // data is not in unified memory
-        int h_data = 42;
-        SAFE(cudaMemcpy(data, &h_data, sizeof(int), cudaMemcpyHostToDevice));
-    }
     producer_gpu<<<1,1>>>(flag, data, result);
-
     // Launch the consumer asynchronously
     consumer_gpu<<<1,1>>>(flag, data, result);
-
-
     // Wait for consumer to finish
     SAFE(cudaDeviceSynchronize());
-
     // Print the result
     printf("%d (expected 42)\n", *result);
 

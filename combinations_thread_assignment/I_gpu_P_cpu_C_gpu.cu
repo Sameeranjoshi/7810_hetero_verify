@@ -19,9 +19,9 @@ using namespace cuda;
 
 __global__ void consumer_gpu(atomic<int>* flag, int* data, int* result) {
     while (flag->load(memory_order_acquire) == 0) {
-        // printf("GPU stalling\n");
-        printf("Flag is %d\n", flag->load(memory_order_acquire));
-        __threadfence();
+        // // printf("GPU stalling\n");
+        // printf("Flag is %d\n", flag->load(memory_order_acquire));
+        // __threadfence();
     }
     *result = *data;
 }
@@ -61,12 +61,11 @@ void init(atomic<int> *flag, int* data, const char *initis){
 
 void producer(atomic<int> *flag, int* data, int *result, const char *produceris){
     if (strcmp(produceris, "cpu") == 0){
-        printf("producer wrote before \n");
         // Producer sequences
         *data = 42;
         flag->store(1, memory_order_release);
 
-        printf("producer wrote flag = %d \n", flag->load(memory_order_acquire));
+        // printf("producer wrote flag = %d \n", flag->load(memory_order_acquire));
         
     }
     if (strcmp(produceris, "gpu") == 0){
@@ -110,22 +109,22 @@ int main(int argc, char* argv[]) {
 
     // Launch depending on corresponding thread.
     init(flag, data, initis);
-    cudaDeviceSynchronize();
+    SAFE(cudaDeviceSynchronize());
     producer(flag, data, result, produceris);
     consumer(flag, data, result, consumeris);
 
     
-    int device;
-cudaGetDevice(&device);
+//     int device;
+// cudaGetDevice(&device); // fills in the pointer with details.
 
-struct cudaDeviceProp props;
-cudaGetDeviceProperties(&props, device);
+// struct cudaDeviceProp props;
+// cudaGetDeviceProperties(&props, device);
 
-    if (props.concurrentManagedAccess){
-        printf("True\n");
-    } else{
-        printf("false\n");
-    }
+//     if (props.concurrentManagedAccess){
+//         printf("True\n");
+//     } else{
+//         printf("false\n");w
+//     }
     // only synchronize if gpu is involved.
     if (!(strcmp(initis, "gpu") != 0 && strcmp(produceris, "gpu") != 0 && strcmp(consumeris, "gpu") != 0)) {
         // // Wait for consumer to finish

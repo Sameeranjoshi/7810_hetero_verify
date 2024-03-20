@@ -9,7 +9,7 @@ filenames = [
     "I_cpu_P_gpu_C_cpu.cu",
     "I_cpu_P_gpu_C_gpu.cu",
     "I_gpu_P_cpu_C_cpu.cu",
-#    "I_gpu_P_cpu_C_gpu.cu",    // This goes infinite ? Why?
+    "I_gpu_P_cpu_C_gpu.cu",    # This goes infinite ? Why?
     "I_gpu_P_gpu_C_cpu.cu",
     "I_gpu_P_gpu_C_gpu.cu"
 ]

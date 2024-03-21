@@ -103,6 +103,7 @@ int main(int argc, char* argv[]) {
     // Launch depending on corresponding thread.
     init(flag, data, initis);
     producer(flag, data, result, produceris);
+    // SAFE(cudaDeviceSynchronize());
     consumer(flag, data, result, consumeris);
 
     // only synchronize if gpu is involved.

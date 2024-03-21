@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import subprocess
 
 # List of filenames
 filenames = [
@@ -19,9 +20,18 @@ for filename in filenames:
     # Check if the file exists
     if os.path.isfile(filename):
         print(f"Running {filename}")
+        # get smi
+        command = "nvidia-smi --query-gpu=compute_cap --format=csv,noheader|head -n 1"
+        output = subprocess.check_output(command, shell=True)
+        smi_value = output.decode().strip()       
+        version_number = smi_value.replace('.', '')
+        result = f"sm_{version_number}"         
+        # print(result)
         # Compile CUDA file
-        os.system(f"nvcc {filename} -arch=sm_70 -o exe/{filename}")
+        compilecmd = f"nvcc {filename} -arch={result} -o exe/{filename}"
+        os.system(compilecmd)
         # Run the executable
-        os.system(f"./exe/{filename}")
+        runcmd = f"./exe/{filename}"
+        os.system(runcmd)
     else:
         print(f"File {filename} not found")

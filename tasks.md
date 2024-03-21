@@ -1,5 +1,6 @@
-0. Combinations of thread assignment.
-1. Sleep
-2. combinations
-3. 42 -> something else/maybe float
-4. Too long programs/random codegen
+0. Assignment of threads(combinations_thread_assignment/)
+1. Sequence of threads(thread_sequence/)
+2. Sleep
+3. combinations
+4. 42 -> something else/maybe float
+5. Too long programs/random codegen

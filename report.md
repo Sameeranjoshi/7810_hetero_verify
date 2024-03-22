@@ -2,13 +2,13 @@
   * This is the last part to be written.
 2. Introduction
   * Talk about What recent trend in architectures.
-  *. Talk about why we need unified memory.
-  *. Challenges and pros of unified Memory.
-  *. What consistency models and why important.
-  *. Why testing is important of these Consistency models.
-  *. What are we doing and why it matters?
-  *. What is the main idea we are exploring.
-  *. "This paper presents"/contributions of this paper/work.
+  * Talk about why we need unified memory.
+  * Challenges and pros of unified Memory.
+    * What consistency models and why important.
+  * Why testing is important of these Consistency models.
+    * What are we doing and why it matters?
+  * What is the main idea we are exploring.
+    * "This paper presents"/contributions of this paper/work.
 3. Motivation
   * This point can be combined with intro.
 4. Background

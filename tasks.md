@@ -4,3 +4,4 @@
 3. combinations
 4. 42 -> something else/maybe float
 5. Too long programs/random codegen
+6. Play with mem_sequence, release, relaxed, ...

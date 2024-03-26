@@ -15,6 +15,7 @@
   *. Consistency models
   *. Litmus testing
   *. Unified memory
+    * Atomics and memory ordering
 5. Testing strategies used
   * Each strategy with it's own examples and pros and cons.
 6. Results

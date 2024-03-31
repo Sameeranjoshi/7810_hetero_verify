@@ -16,6 +16,8 @@ __global__ void consumer(atomic<int>* flag, int* data, int* result0, int*result1
 #define SAFE(x) if (0 != x) { abort(); }
 
 int main(int argc, char* argv[]) {
+
+
     atomic<int>* flag;
     int* data;
     int* result0, *result1;
@@ -62,7 +64,7 @@ int main(int argc, char* argv[]) {
 
     // Print the result
     // printf("data = %d (expected 42) flag = %d \n", *data, flag->load(memory_order_acquire));
-    printf("data = %d flag = %d \n", *result0, *result1);
+    printf("result0=%d result1=%d \n", *result0, *result1);
 
     return 0;
 }

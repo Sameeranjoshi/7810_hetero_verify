@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import os
 import subprocess
 
@@ -13,7 +12,10 @@ seq2 = 0
 interleave = 0
 filename = "weak.cu"
 
-for _ in range(5):
+# Take the input parameter from the user for the number of loop iterations
+num_iterations = int(input("Enter the number of loop iterations: "))
+
+for _ in range(num_iterations):
     # Check if the file exists
     if os.path.isfile(filename):
         print(f"Running {filename}")

@@ -15,8 +15,7 @@ __global__ void consumer(atomic<int>* flag, int* data, int* result0, int*result1
 
 #define SAFE(x) if (0 != x) { abort(); }
 
-int main(int argc, char* argv[]) {
-
+void run(){
 
     atomic<int>* flag;
     int* data;
@@ -47,7 +46,8 @@ int main(int argc, char* argv[]) {
     ////////////////////////////////////////////////////////////////////////////
 
     // Launch the consumer asynchronously
-    consumer<<<1,1>>>(flag, data, result0, result1);
+    // consumer<<<1,1>>>(flag, data, result0, result1);
+    consumer<<<5,1024>>>(flag, data, result0, result1);
     
     // Producer sequence
     if (data_in_unified_memory) {
@@ -66,5 +66,8 @@ int main(int argc, char* argv[]) {
     // printf("data = %d (expected 42) flag = %d \n", *data, flag->load(memory_order_acquire));
     printf("result0=%d result1=%d \n", *result0, *result1);
 
+}
+int main(int argc, char* argv[]) {
+    run();
     return 0;
 }

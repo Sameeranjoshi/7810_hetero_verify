@@ -1,0 +1,11 @@
+[u1418973@kp360:litmus_explorer]$ ./weak_base 10000
+
+ 25%
+ 50%
+ Histogram after 10000 runs
+seq1 (flag)=0; (data)=0;  = 1
+seq2 (flag)=1; (data)=42; = 9999
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+[u1418973@kp360:litmus_explorer]$ 
+

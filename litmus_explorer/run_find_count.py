@@ -16,22 +16,25 @@ filename = "weak.cu"
 num_iterations = int(input("Enter the number of loop iterations: "))
 count_of_tests = int(input("Enter the number of tests to run: "))
 
+
+# get smi
+command = "nvidia-smi --query-gpu=compute_cap --format=csv,noheader|head -n 1"
+output = subprocess.check_output(command, shell=True)
+smi_value = output.decode().strip()       
+version_number = smi_value.replace('.', '')
+result = f"sm_{version_number}"         
+# print(result)
+os.system("mkdir -p exe/")
+# Compile CUDA file
+compilecmd = f"nvcc {filename} -arch={result} -o exe/{filename}"
+# print(compilecmd)
+os.system(compilecmd)
+
 for _ in range(num_iterations):
     # Check if the file exists
     if os.path.isfile(filename):
         print(f"Running {filename}")
-        # get smi
-        command = "nvidia-smi --query-gpu=compute_cap --format=csv,noheader|head -n 1"
-        output = subprocess.check_output(command, shell=True)
-        smi_value = output.decode().strip()       
-        version_number = smi_value.replace('.', '')
-        result = f"sm_{version_number}"         
-        # print(result)
-        # Compile CUDA file
-        os.system("mkdir -p exe/")
-        compilecmd = f"nvcc {filename} -arch={result} -o exe/{filename}"
-        # print(compilecmd)
-        os.system(compilecmd)
+
         # Run the executable
         runcmd = f"./exe/{filename} {count_of_tests}"
         output = subprocess.check_output(runcmd, shell=True)
@@ -41,7 +44,6 @@ for _ in range(num_iterations):
         weak_local=0
         interleave_local=0
         for line in output_lines:
-            print(line)
             if "seq1" in line:
                 seq1_local = int(line.split('=')[-1].strip())  
             elif "seq2" in line:
@@ -50,6 +52,8 @@ for _ in range(num_iterations):
                 interleave_local = int(line.split('=')[-1].strip())  
             elif "weak" in line:
                 weak_local = int(line.split('=')[-1].strip())  
+            else:
+                print(line)
 
         # print(seq1_local)
         # print(seq2_local)

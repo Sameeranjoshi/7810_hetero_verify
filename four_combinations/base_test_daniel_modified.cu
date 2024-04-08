@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
     SAFE(cudaMallocManaged(&data, sizeof(int)));
     // Initial values: data = 0, flag = 0
     flag->store(0, memory_order_relaxed);
-    data = 0;
+    *data = 0;
 
     ////////////////////////////////////////////////////////////////////////////
 

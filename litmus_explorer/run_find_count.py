@@ -10,12 +10,12 @@ seq1 = 0
 weak = 0
 seq2 = 0
 interleave = 0
-filename = "weak.cu"
+# filename = "weak.cu"
 
 # Take the input parameter from the user for the number of loop iterations
 num_iterations = int(input("Enter the number of loop iterations: "))
 count_of_tests = int(input("Enter the number of tests to run: "))
-
+filename = str(input("Enter the filename to test: "))
 
 # get smi
 command = "nvidia-smi --query-gpu=compute_cap --format=csv,noheader|head -n 1"
@@ -52,8 +52,7 @@ for _ in range(num_iterations):
                 interleave_local = int(line.split('=')[-1].strip())  
             elif "weak" in line:
                 weak_local = int(line.split('=')[-1].strip())  
-            else:
-                print(line)
+            print(line)
 
         # print(seq1_local)
         # print(seq2_local)
@@ -67,6 +66,7 @@ for _ in range(num_iterations):
     else:
         print(f"File {filename} not found")
 
+print(f"\n ----------------------------------------------\n")
 print(f"\n Results after {num_iterations} many iterations")
 print(f"seq1 (flag)=0; (data)=0;  = {seq1}")
 print(f"seq2 (flag)=1; (data)=42; = {seq2}")

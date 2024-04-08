@@ -12,6 +12,7 @@ num_iterations = int(input("Enter the number of loop iterations: "))
 count_of_tests = int(input("Enter the number of tests to run: "))
 filename = str(input("Enter the filename to test: "))
 
+
 # get smi
 command = "nvidia-smi --query-gpu=compute_cap --format=csv,noheader|head -n 1"
 output = subprocess.check_output(command, shell=True)
@@ -28,7 +29,6 @@ os.system(compilecmd)
 for _ in range(num_iterations):
     # Check if the file exists
     if os.path.isfile(filename):
-        print(f"Running {filename}")
 
         # Run the executable
         runcmd = f"./exe/{filename} {count_of_tests}"
@@ -62,6 +62,9 @@ for _ in range(num_iterations):
         print(f"File {filename} not found")
 
 print(f"\n ----------------------------------------------\n")
+print(f"Iterations: {num_iterations}")
+print(f"Test count: {count_of_tests}")
+print(f"filename: {filename}")
 print(f"\n Results after {num_iterations} many iterations")
 print(f"seq1 (flag)=0; (data)=0;  = {seq1}")
 print(f"seq2 (flag)=1; (data)=42; = {seq2}")

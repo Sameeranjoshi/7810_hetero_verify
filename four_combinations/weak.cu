@@ -7,28 +7,33 @@
 
 using namespace cuda;
 
-__global__ void consumer(atomic<int>* flag, int* data, int* result0, int*result1) {
+__global__ void consumer(atomic<int>* flag, int* data, int* result0/*flag*/, int*result1/*data*/) {
+
+    // Get the start time
+    clock_t start = clock();    
+
     // while (flag->load(memory_order_acquire) == 0) {}
-    *result1 = flag->load(memory_order_relaxed);
+    *result0 = flag->load(memory_order_relaxed);
 
-        // Get the start time
-    clock_t start = clock();
+        // Busy-wait loop until the specified time has elapsed
+        while ((clock() - start) * 1000 / CLOCKS_PER_SEC < 1000) {
+            // Do nothing, just wait
+        }
 
-    // Busy-wait loop until the specified time has elapsed
-    while ((clock() - start) * 1000 / CLOCKS_PER_SEC < 1000) {
-        // Do nothing, just wait
-    }
-
-    *result0 = *data;
+    *result1 = *data;
 }
 
 #define SAFE(x) if (0 != x) { abort(); }
 
-void run(){
+struct Result{
+int seq1, seq2, interleave, weak;
+};
+
+void run(Result *count_local){
 
     atomic<int>* flag;
     int* data;
-    int* result0, *result1;
+    int* result0, *result1; // r0= flag, r1=data, GPUHarbor way
 
     int data_in_unified_memory = 1;
 
@@ -83,7 +88,23 @@ void run(){
 
     // Print the result
     // printf("data = %d (expected 42) flag = %d \n", *data, flag->load(memory_order_acquire));
-    printf("result0=%d result1=%d \n", *result0, *result1);
+    // printf("result0=%d result1=%d \n", *result0, *result1);
+
+    
+    //r0=flag, r1=data
+    if (*result0 == 0 && *result1 == 0){
+        count_local->seq1 += 1 ;  //# t1->t2
+    }
+    else if(*result0 == 1 && *result1 == 42){
+        count_local->seq2 += 1 ;  //# t2-t1
+    }
+    else if(*result0 == 0 && *result1 == 42){
+        count_local->interleave += 1;
+    }
+    else if(*result0 == 1 && *result1 == 0){
+        count_local->weak += 1;
+    }
+        
 
        // Free the allocated memory at the end
     SAFE(cudaFree(flag));
@@ -98,7 +119,24 @@ void run(){
 
 }
 int main(int argc, char* argv[]) {
-    for (int i=0; i< 1000; i++)
-        run();
+     int loop_size = atoi(argv[1]);
+     Result count_local{0};
+
+    for (int i=0; i< loop_size; i++){
+        // printf("i=%d\n", i);
+        run(&count_local);
+        if (i == loop_size/4){
+            printf("\n 25%%");
+        } else if (i == loop_size/2){
+            printf("\n 50%%");
+        }
+    }
+
+    printf("\n Histogram after %d runs\n", loop_size);
+    printf("seq1 (flag)=0; (data)=0;  = %d\n", count_local.seq1);
+    printf("seq2 (flag)=1; (data)=42; = %d\n", count_local.seq2);
+    printf("intlv(flag)=0; (data)=42; = %d\n", count_local.interleave);
+    printf("weak (flag)=1; (data)=0;  = %d\n", count_local.weak);
+
     return 0;
 }

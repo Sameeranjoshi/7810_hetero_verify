@@ -35,22 +35,30 @@ for _ in range(num_iterations):
         # Run the executable
         runcmd = f"./exe/{filename} {count_of_tests}"
         output = subprocess.check_output(runcmd, shell=True)
-        output_str = output.decode()  # Print the captured output
-        print (output_str)
-        # # Parse the output and update counters
-        # flag = int(output_str.split("result0=")[1].split()[0])   # result0 = data
-        # data = int(output_str.split("result1=")[1].split()[0])   # result1 = flag
-        
-        # #histogram logic for top level loop
-        # # r0=flag, r1=data
-        # if flag == 0 and data == 0:
-        #     seq1 += 1   # t1->t2
-        # elif flag == 1 and data == 42:
-        #     seq2 += 1   # t2-t1
-        # elif flag == 0 and data == 42:
-        #     interleave += 1
-        # elif flag == 1 and data == 0:
-        #     weak += 1
+        output_lines = output.decode().split('\n')
+        seq1_local=0
+        seq2_local=0
+        weak_local=0
+        interleave_local=0
+        for line in output_lines:
+            print(line)
+            if "seq1" in line:
+                seq1_local = int(line.split('=')[-1].strip())  
+            elif "seq2" in line:
+                seq2_local = int(line.split('=')[-1].strip())  
+            elif "intlv" in line:
+                interleave_local = int(line.split('=')[-1].strip())  
+            elif "weak" in line:
+                weak_local = int(line.split('=')[-1].strip())  
+
+        # print(seq1_local)
+        # print(seq2_local)
+        # print(interleave_local)
+        # print(weak_local)
+        seq1 = seq1 + seq1_local
+        seq2 = seq2 + seq2_local
+        interleave = interleave + interleave_local
+        weak = weak + weak_local
         
     else:
         print(f"File {filename} not found")

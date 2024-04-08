@@ -1,0 +1,43 @@
+[u1418973@kp359:litmus_explorer]$ python3 run_find_count.py
+Enter the number of loop iterations: 10
+Enter the number of tests to run: 1000000
+Running weak.cu
+
+ 25%
+ 50%
+ Histogram after 1000000 runs
+seq1 (flag)=0; (data)=0;  = 0
+seq2 (flag)=1; (data)=42; = 999990
+intlv(flag)=0; (data)=42; = 10
+weak (flag)=1; (data)=0;  = 0
+
+Running weak.cu
+
+ 25%
+ 50%
+ Histogram after 1000000 runs
+seq1 (flag)=0; (data)=0;  = 0
+seq2 (flag)=1; (data)=42; = 1000000
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+
+Running weak.cu
+
+ 25%
+ 50%
+ Histogram after 1000000 runs
+seq1 (flag)=0; (data)=0;  = 0
+seq2 (flag)=1; (data)=42; = 999999
+intlv(flag)=0; (data)=42; = 1
+weak (flag)=1; (data)=0;  = 0
+
+Running weak.cu
+
+ 25%
+ 50%
+ Histogram after 1000000 runs
+seq1 (flag)=0; (data)=0;  = 0
+seq2 (flag)=1; (data)=42; = 999998
+intlv(flag)=0; (data)=42; = 2
+weak (flag)=1; (data)=0;  = 0
+

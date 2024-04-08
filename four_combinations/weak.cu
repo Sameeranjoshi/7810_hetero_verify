@@ -10,6 +10,15 @@ using namespace cuda;
 __global__ void consumer(atomic<int>* flag, int* data, int* result0, int*result1) {
     // while (flag->load(memory_order_acquire) == 0) {}
     *result1 = flag->load(memory_order_relaxed);
+
+        // Get the start time
+    clock_t start = clock();
+
+    // Busy-wait loop until the specified time has elapsed
+    while ((clock() - start) * 1000 / CLOCKS_PER_SEC < 1000) {
+        // Do nothing, just wait
+    }
+
     *result0 = *data;
 }
 
@@ -47,8 +56,18 @@ void run(){
 
     // Launch the consumer asynchronously
     // consumer<<<1,1>>>(flag, data, result0, result1);
-    consumer<<<5,1024>>>(flag, data, result0, result1);
     
+    // gpU
+    consumer<<<5,1024>>>(flag, data, result0, result1); 
+
+    
+    
+  //delay
+    int i = 1000;
+    while(i ==0){
+        sleep(1);
+    }
+
     // Producer sequence
     if (data_in_unified_memory) {
         *data = 42;
@@ -59,15 +78,27 @@ void run(){
     flag->store(1, memory_order_relaxed);
 
 
-    // Wait for consumer to finish
+  // Wait for consumer to finish
     SAFE(cudaDeviceSynchronize());
 
     // Print the result
     // printf("data = %d (expected 42) flag = %d \n", *data, flag->load(memory_order_acquire));
     printf("result0=%d result1=%d \n", *result0, *result1);
 
+       // Free the allocated memory at the end
+    SAFE(cudaFree(flag));
+    if (data_in_unified_memory) {
+        SAFE(cudaFree(data));
+    } else {
+        SAFE(cudaFree(data));
+    }
+    SAFE(cudaFreeHost(result0));
+    SAFE(cudaFreeHost(result1));
+
+
 }
 int main(int argc, char* argv[]) {
-    run();
+    for (int i=0; i< 1000; i++)
+        run();
     return 0;
 }

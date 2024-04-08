@@ -1,0 +1,83 @@
+[u1418973@kp359:litmus_explorer]$ python3 run_find_count.py 
+Enter the number of loop iterations: 10
+Enter the number of tests to run: 100000
+Running weak.cu
+
+ 25%
+ 50%
+ Histogram after 100000 runs
+seq1 (flag)=0; (data)=0;  = 0
+seq2 (flag)=1; (data)=42; = 100000
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+
+Running weak.cu
+
+ 25%
+ 50%
+ Histogram after 100000 runs
+seq1 (flag)=0; (data)=0;  = 0
+seq2 (flag)=1; (data)=42; = 100000
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+
+Running weak.cu
+
+ 25%
+ 50%
+ Histogram after 100000 runs
+seq1 (flag)=0; (data)=0;  = 0
+seq2 (flag)=1; (data)=42; = 100000
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+
+Running weak.cu
+
+ 25%
+ 50%
+ Histogram after 100000 runs
+seq1 (flag)=0; (data)=0;  = 0
+seq2 (flag)=1; (data)=42; = 100000
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+
+Running weak.cu
+
+ 25%
+ 50%
+ Histogram after 100000 runs
+seq1 (flag)=0; (data)=0;  = 0
+seq2 (flag)=1; (data)=42; = 100000
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+
+Running weak.cu
+
+ 25%
+ 50%
+ Histogram after 100000 runs
+seq1 (flag)=0; (data)=0;  = 0
+seq2 (flag)=1; (data)=42; = 99998
+intlv(flag)=0; (data)=42; = 2
+weak (flag)=1; (data)=0;  = 0
+
+Running weak.cu
+
+ 25%
+ 50%
+ Histogram after 100000 runs
+seq1 (flag)=0; (data)=0;  = 0
+seq2 (flag)=1; (data)=42; = 100000
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+
+Running weak.cu
+
+ 25%
+ 50%
+ Histogram after 100000 runs
+seq1 (flag)=0; (data)=0;  = 0
+seq2 (flag)=1; (data)=42; = 100000
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+

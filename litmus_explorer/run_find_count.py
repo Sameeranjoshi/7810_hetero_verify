@@ -1,16 +1,11 @@
 import os
 import subprocess
 
-# List of filenames
-filenames = [
-    "weak.cu",
-]
 
 seq1 = 0
 weak = 0
 seq2 = 0
 interleave = 0
-# filename = "weak.cu"
 
 # Take the input parameter from the user for the number of loop iterations
 num_iterations = int(input("Enter the number of loop iterations: "))

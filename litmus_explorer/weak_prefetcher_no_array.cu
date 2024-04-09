@@ -60,11 +60,11 @@ void run(Result *count_local){
     
     // prefetch to GPU( 0 is device code, have a code in the top level to check device number)
     cudaMemPrefetchAsync(flag, sizeof(atomic<int>), 0, NULL); 
-    cudaMemPrefetchAsync(data, sizeof(atomic<int>), 0, NULL); 
+    cudaMemPrefetchAsync(data, sizeof(int), 0, NULL); 
     // RUN on GPU
     consumer<<<1,1>>>(flag, data, result0, result1);
     // Prefetch on CPU
-    cudaMemPrefetchAsync(flag, sizeof(int), cudaCpuDeviceId, NULL); 
+    cudaMemPrefetchAsync(flag, sizeof(atomic<int>), cudaCpuDeviceId, NULL); 
     cudaMemPrefetchAsync(data, sizeof(int), cudaCpuDeviceId, NULL); 
     // run on CPU
     

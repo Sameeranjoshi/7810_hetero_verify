@@ -1,4 +1,5 @@
 // A array of data and result0 and result1, instead of a single value.
+// flag still single
 
 #include <cuda/atomic>
 #include <cstdio>

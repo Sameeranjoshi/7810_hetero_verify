@@ -1,0 +1,38 @@
+[u1418973@kp360:litmus_explorer]$ python3 run_find_count.py 
+Enter the number of loop iterations: 2
+Enter the number of tests to run: 1000
+Enter the filename to test: weak_base_modify2.cu
+
+ Isssue with implementation please fix!
+ 25%
+ 50%
+ Histogram after 1000 runs
+seq1 (flag)=0; (data)=0;  = 0
+seq2 (flag)=1; (data)=42; = 999
+intlv(flag)=0; (data)=42; = 1
+weak (flag)=1; (data)=0;  = 0
+
+
+ Isssue with implementation please fix!
+ 25%
+ 50%
+ Isssue with implementation please fix!
+ Histogram after 1000 runs
+seq1 (flag)=0; (data)=0;  = 0
+seq2 (flag)=1; (data)=42; = 998
+intlv(flag)=0; (data)=42; = 2
+weak (flag)=1; (data)=0;  = 0
+
+
+ ----------------------------------------------
+
+Iterations: 2
+Test count: 1000
+filename: weak_base_modify2.cu
+
+ Results after 2 many iterations
+seq1 (flag)=0; (data)=0;  = 0
+seq2 (flag)=1; (data)=42; = 1997
+intlv(flag)=0; (data)=42; = 3
+weak (flag)=1; (data)=0;  = 0
+[u1418973@kp360:litmus_explorer]$ 

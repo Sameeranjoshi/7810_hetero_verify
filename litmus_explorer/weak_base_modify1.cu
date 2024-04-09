@@ -1,6 +1,4 @@
-// To compile and run:
-// nvcc test.cu -arch=sm_80 -o test
-// ./test
+// Change the <<<block, threads>  parameter.
 
 #include <cuda/atomic>
 #include <cstdio>

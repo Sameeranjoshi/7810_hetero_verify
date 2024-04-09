@@ -24,3 +24,4 @@ Lahav et.al PLDI 17
 
 * https://users.soe.ucsc.edu/~tsorensen/files/oopsla2020.pdf#page=8.68
 * Related work is good for reference.
+https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#um-system-allocator

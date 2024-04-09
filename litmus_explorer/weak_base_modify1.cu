@@ -8,7 +8,6 @@
 using namespace cuda;
 
 __global__ void consumer(atomic<int>* flag, int* data, int* result0/*flag*/, int*result1/*data*/) {
-
     // // Get the start time
     // clock_t start = clock();    
 
@@ -60,11 +59,16 @@ void run(Result *count_local){
     ////////////////////////////////////////////////////////////////////////////
 
     // Launch the consumer asynchronously
-    consumer<<<1,1>>>(flag, data, result0, result1);
+    // consumer<<<1,1>>>(flag, data, result0, result1);
     
     // gpU
-    // consumer<<<5,1024>>>(flag, data, result0, result1); 
-
+    // max go till 2 blocks and n threads.
+    consumer<<<2,1024>>>(flag, data, result0, result1); 
+    cudaError_t error = cudaGetLastError();
+    if (error != cudaSuccess) {
+        printf("CUDA kernel launch error: %s\n", cudaGetErrorString(error));
+        exit(1);
+    }
     
     
 //   //delay

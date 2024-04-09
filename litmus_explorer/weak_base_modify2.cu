@@ -1,6 +1,4 @@
-// To compile and run:
-// nvcc test.cu -arch=sm_80 -o test
-// ./test
+// A array of data and result0 and result1, instead of a single value.
 
 #include <cuda/atomic>
 #include <cstdio>
@@ -90,11 +88,13 @@ void run(Result *count_local){
     }
     
     
-//   //delay
-//     int i = 1000;
-//     while(i ==0){
-//         sleep(1);
-//     }
+  //delay
+
+    // int i = 1000000;
+    // while(i ==0){
+    //     sleep(1);
+    //     i--;
+    // }
 
     // Producer sequence
     if (data_in_unified_memory) {

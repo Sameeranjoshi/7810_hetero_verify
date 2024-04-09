@@ -1,0 +1,225 @@
+Enter the number of loop iterations: Enter the number of tests to run: Enter the filename to test: 
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ 25%
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ 50%
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Histogram after 100000 runs
+seq1 (flag)=0; (data)=0;  = 4
+seq2 (flag)=1; (data)=42; = 99943
+intlv(flag)=0; (data)=42; = 53
+weak (flag)=1; (data)=0;  = 0
+
+
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ 25%
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ 50%
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Histogram after 100000 runs
+seq1 (flag)=0; (data)=0;  = 4
+seq2 (flag)=1; (data)=42; = 99972
+intlv(flag)=0; (data)=42; = 24
+weak (flag)=1; (data)=0;  = 0
+
+
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ 25%
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ 50%
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Histogram after 100000 runs
+seq1 (flag)=0; (data)=0;  = 4
+seq2 (flag)=1; (data)=42; = 99929
+intlv(flag)=0; (data)=42; = 67
+weak (flag)=1; (data)=0;  = 0
+
+
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ 25%
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ 50%
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Isssue with implementation please fix!
+ Histogram after 100000 runs
+seq1 (flag)=0; (data)=0;  = 4
+seq2 (flag)=1; (data)=42; = 99954
+intlv(flag)=0; (data)=42; = 42
+weak (flag)=1; (data)=0;  = 0
+
+
+ ----------------------------------------------
+
+Iterations: 4
+Test count: 100000
+filename: weak_base_modify2.cu
+
+ Results after 4 many iterations
+seq1 (flag)=0; (data)=0;  = 16
+seq2 (flag)=1; (data)=42; = 399798
+intlv(flag)=0; (data)=42; = 186
+weak (flag)=1; (data)=0;  = 0

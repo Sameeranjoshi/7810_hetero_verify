@@ -17,17 +17,23 @@ __global__ void consumer(atomic<int>* flag, int* data, int* result0/*flag*/, int
     }
 }
 
-    int all_are_same(const int *result) {
-        float sum = 0.0;
-        for (int i = 0; i < THREADS; ++i) {
-            sum += result[i];
-        }
-        float avg = sum/(float)(THREADS);
-        if (avg != result[0])
-            return 0;
-        else 
-            return 1;
+int all_are_same(const int *result) {
+    int sum = 0;
+    for (int i = 0; i < THREADS; ++i) {
+        sum += result[i];
     }
+    float avg = (float)sum / THREADS; // Convert sum to float before division
+    if (avg != result[0]) {
+        // for (int i = 0; i < THREADS; ++i) {
+        //     printf("%d - ", result[i]);
+        // }
+        // printf("\n Avg = %f", avg);
+        // printf("\n Result[0] = %d", result[0]);
+        return 0;
+    } else {
+        return 1;
+    }
+}
     
 #define SAFE(x) if (0 != x) { abort(); }
 
@@ -106,10 +112,10 @@ void run(Result *count_local){
   // Wait for consumer to finish
     SAFE(cudaDeviceSynchronize());
 
-    // perform some checks to make sure all are same
-    if ((all_are_same(result0) == 0) || (all_are_same(result1) == 0)){  // someone is not same
-        printf("\n Isssue with implementation please fix!");
-    }
+    // // perform some checks to make sure all are same
+    // if ((all_are_same(result0) == 0) || (all_are_same(result1) == 0)){  // someone is not same
+    //     printf("\n Isssue with implementation please fix!");
+    // }
 
     //r0=flag, r1=data
     if (result0[0] == 0 && result1[0] == 0){

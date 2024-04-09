@@ -11,7 +11,9 @@ interleave = 0
 num_iterations = int(input("Enter the number of loop iterations: "))
 count_of_tests = int(input("Enter the number of tests to run: "))
 filename = str(input("Enter the filename to test: "))
+want_flags = (input("Want compiler flags? (1(yes)|0(no)): "))
 
+nvcc_flags = f"--threads=1 --maxrregcount 16 --extra-device-vectorization --extensible-whole-program --restrict --use_fast_math -O3 --expt-relaxed-constexpr"
 
 # get smi
 command = "nvidia-smi --query-gpu=compute_cap --format=csv,noheader|head -n 1"
@@ -21,8 +23,12 @@ version_number = smi_value.replace('.', '')
 result = f"sm_{version_number}"         
 # print(result)
 os.system("mkdir -p exe/")
-# Compile CUDA file
-compilecmd = f"nvcc {filename} -arch={result} -o exe/{filename}"
+if want_flags == 1:
+    # Compile CUDA file
+    compilecmd = f"nvcc {filename} -arch={result} {nvcc_flags} -o exe/{filename}"
+else:
+    compilecmd = f"nvcc {filename} -arch={result} -o exe/{filename}"
+
 # print(compilecmd)
 os.system(compilecmd)
 

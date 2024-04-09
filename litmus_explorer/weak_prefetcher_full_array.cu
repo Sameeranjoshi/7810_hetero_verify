@@ -1,5 +1,9 @@
-// Major change  = arrays are 1024, but only 1 thread.
+// A array of data and result0 and result1, instead of a single value.
+// copy to array and read from array.
+// This doesn't show different outputs(next test using only 1 thread does.)
+// added delay
 
+// array, flag, result and data  = 1024
 #include <cuda/atomic>
 #include <cstdio>
 
@@ -55,7 +59,7 @@ void run(Result *count_local){
     // Flag in unified memory
     SAFE(cudaMallocManaged(&flag, THREADS * sizeof(atomic<int>)));
 
-    // Data placed as specifieddata
+    // Data placed as specified
     if (data_in_unified_memory) {
         SAFE(cudaMallocManaged(&data, sizeof(int) * THREADS));
     } else {
@@ -75,16 +79,21 @@ void run(Result *count_local){
     }
 
     ////////////////////////////////////////////////////////////////////////////
-
-    // Launch the consumer asynchronously
-    // consumer<<<1,1>>>(flag, data, result0, result1);
+        
+    // prefetch to GPU( 0 is device code, have a code in the top level to check device number)
+    cudaMemPrefetchAsync(flag, sizeof(atomic<int>), 0, NULL); 
+    cudaMemPrefetchAsync(data, sizeof(int), 0, NULL); 
+    // RUN on GPU
+    consumer<<<1,1024>>>(flag, data, result0, result1);
+    // Prefetch on CPU
+    cudaMemPrefetchAsync(flag, sizeof(atomic<int>), cudaCpuDeviceId, NULL); 
+    cudaMemPrefetchAsync(data, sizeof(int), cudaCpuDeviceId, NULL); 
+    // run on CPU
     
-    // gpU
-    // max go till 2 blocks and n threads.
-    consumer<<<1,1>>>(flag, data, result0, result1); 
+    
     cudaError_t error = cudaGetLastError();
     if (error != cudaSuccess) {
-        printf("CUDA kernel launch error: %s\n", cudaGetErrorString(error));
+        printf("CUDA kernel launch or prefetching error(mostly the later): %s\n", cudaGetErrorString(error));
         exit(1);
     }
     

@@ -3,6 +3,7 @@
 // This doesn't show different outputs(next test using only 1 thread does.)
 // added delay
 
+// array, flag, result and data  = 1024
 #include <cuda/atomic>
 #include <cstdio>
 
@@ -80,7 +81,7 @@ void run(Result *count_local){
     ////////////////////////////////////////////////////////////////////////////
 
     // Launch the consumer asynchronously
-    // consumer<<<1,1>>>(flag, data, result0, result1);
+    consumer<<<1,1024>>>(flag, data, result0, result1);
         
     
     cudaError_t error = cudaGetLastError();

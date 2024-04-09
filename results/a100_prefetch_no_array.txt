@@ -1,0 +1,152 @@
+
+ 25%
+ 50%
+ Histogram after 50000 runs
+seq1 (flag)=0; (data)=0;  = 12456
+seq2 (flag)=1; (data)=42; = 37544
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+
+ 25%
+ 50%
+ Histogram after 50000 runs
+seq1 (flag)=0; (data)=0;  = 18297
+seq2 (flag)=1; (data)=42; = 31701
+intlv(flag)=0; (data)=42; = 2
+weak (flag)=1; (data)=0;  = 0
+
+ 25%
+ 50%
+ Histogram after 50000 runs
+seq1 (flag)=0; (data)=0;  = 14718
+seq2 (flag)=1; (data)=42; = 35282
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+
+ 25%
+ 50%
+ Histogram after 50000 runs
+seq1 (flag)=0; (data)=0;  = 19002
+seq2 (flag)=1; (data)=42; = 30998
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+
+ 25%
+ 50%
+ Histogram after 50000 runs
+seq1 (flag)=0; (data)=0;  = 17666
+seq2 (flag)=1; (data)=42; = 32333
+intlv(flag)=0; (data)=42; = 1
+weak (flag)=1; (data)=0;  = 0
+
+ 25%
+ 50%
+ Histogram after 50000 runs
+seq1 (flag)=0; (data)=0;  = 14054
+seq2 (flag)=1; (data)=42; = 35946
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+
+ 25%
+ 50%
+ Histogram after 50000 runs
+seq1 (flag)=0; (data)=0;  = 15479
+seq2 (flag)=1; (data)=42; = 34521
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+
+ 25%
+ 50%
+ Histogram after 50000 runs
+seq1 (flag)=0; (data)=0;  = 15829
+seq2 (flag)=1; (data)=42; = 34170
+intlv(flag)=0; (data)=42; = 1
+weak (flag)=1; (data)=0;  = 0
+
+ 25%
+ 50%
+ Histogram after 50000 runs
+seq1 (flag)=0; (data)=0;  = 7353
+seq2 (flag)=1; (data)=42; = 42647
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+
+ 25%
+ 50%
+ Histogram after 50000 runs
+seq1 (flag)=0; (data)=0;  = 1740
+seq2 (flag)=1; (data)=42; = 48260
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+
+ 25%
+ 50%
+ Histogram after 50000 runs
+seq1 (flag)=0; (data)=0;  = 19780
+seq2 (flag)=1; (data)=42; = 30218
+intlv(flag)=0; (data)=42; = 2
+weak (flag)=1; (data)=0;  = 0
+
+ 25%
+ 50%
+ Histogram after 50000 runs
+seq1 (flag)=0; (data)=0;  = 8725
+seq2 (flag)=1; (data)=42; = 41275
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+
+ 25%
+ 50%
+ Histogram after 50000 runs
+seq1 (flag)=0; (data)=0;  = 5436
+seq2 (flag)=1; (data)=42; = 44563
+intlv(flag)=0; (data)=42; = 1
+weak (flag)=1; (data)=0;  = 0
+
+ 25%
+ 50%
+ Histogram after 50000 runs
+seq1 (flag)=0; (data)=0;  = 5637
+seq2 (flag)=1; (data)=42; = 44362
+intlv(flag)=0; (data)=42; = 1
+weak (flag)=1; (data)=0;  = 0
+
+ 25%
+ 50%
+ Histogram after 50000 runs
+seq1 (flag)=0; (data)=0;  = 7111
+seq2 (flag)=1; (data)=42; = 42889
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+
+ 25%
+ 50%
+ Histogram after 50000 runs
+seq1 (flag)=0; (data)=0;  = 12417
+seq2 (flag)=1; (data)=42; = 37583
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+
+ 25%
+ 50%
+ Histogram after 50000 runs
+seq1 (flag)=0; (data)=0;  = 19015
+seq2 (flag)=1; (data)=42; = 30985
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+
+ 25%
+ 50%
+ Histogram after 50000 runs
+seq1 (flag)=0; (data)=0;  = 8389
+seq2 (flag)=1; (data)=42; = 41611
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+
+ 25%
+ 50%
+ Histogram after 50000 runs
+seq1 (flag)=0; (data)=0;  = 8830
+seq2 (flag)=1; (data)=42; = 41169
+intlv(flag)=0; (data)=42; = 1
+weak (flag)=1; (data)=0;  = 0

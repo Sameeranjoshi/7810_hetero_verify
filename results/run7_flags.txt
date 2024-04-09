@@ -1,0 +1,108 @@
+[u1418973@kp360:litmus_explorer]$ python3 run_find_count.py 
+Enter the number of loop iterations: 10
+Enter the number of tests to run: 1000
+Enter the filename to test: weak_base_modify3.cu
+Want compiler flags? (1(yes)|0(no)): 1
+
+ 25%
+ 50%
+ Histogram after 1000 runs
+seq1 (flag)=0; (data)=0;  = 0
+seq2 (flag)=1; (data)=42; = 998
+intlv(flag)=0; (data)=42; = 2
+weak (flag)=1; (data)=0;  = 0
+
+
+ 25%
+ 50%
+ Histogram after 1000 runs
+seq1 (flag)=0; (data)=0;  = 0
+seq2 (flag)=1; (data)=42; = 1000
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+
+
+ 25%
+ 50%
+ Histogram after 1000 runs
+seq1 (flag)=0; (data)=0;  = 1
+seq2 (flag)=1; (data)=42; = 997
+intlv(flag)=0; (data)=42; = 2
+weak (flag)=1; (data)=0;  = 0
+
+
+ 25%
+ 50%
+ Histogram after 1000 runs
+seq1 (flag)=0; (data)=0;  = 1
+seq2 (flag)=1; (data)=42; = 998
+intlv(flag)=0; (data)=42; = 1
+weak (flag)=1; (data)=0;  = 0
+
+
+ 25%
+ 50%
+ Histogram after 1000 runs
+seq1 (flag)=0; (data)=0;  = 0
+seq2 (flag)=1; (data)=42; = 1000
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+
+
+ 25%
+ 50%
+ Histogram after 1000 runs
+seq1 (flag)=0; (data)=0;  = 1
+seq2 (flag)=1; (data)=42; = 996
+intlv(flag)=0; (data)=42; = 3
+weak (flag)=1; (data)=0;  = 0
+
+
+ 25%
+ 50%
+ Histogram after 1000 runs
+seq1 (flag)=0; (data)=0;  = 0
+seq2 (flag)=1; (data)=42; = 998
+intlv(flag)=0; (data)=42; = 2
+weak (flag)=1; (data)=0;  = 0
+
+
+ 25%
+ 50%
+ Histogram after 1000 runs
+seq1 (flag)=0; (data)=0;  = 0
+seq2 (flag)=1; (data)=42; = 999
+intlv(flag)=0; (data)=42; = 1
+weak (flag)=1; (data)=0;  = 0
+
+
+ 25%
+ 50%
+ Histogram after 1000 runs
+seq1 (flag)=0; (data)=0;  = 0
+seq2 (flag)=1; (data)=42; = 1000
+intlv(flag)=0; (data)=42; = 0
+weak (flag)=1; (data)=0;  = 0
+
+
+ 25%
+ 50%
+ Histogram after 1000 runs
+seq1 (flag)=0; (data)=0;  = 0
+seq2 (flag)=1; (data)=42; = 998
+intlv(flag)=0; (data)=42; = 2
+weak (flag)=1; (data)=0;  = 0
+
+
+ ----------------------------------------------
+
+Iterations: 10
+Test count: 1000
+filename: weak_base_modify3.cu
+
+ Results after 10 many iterations
+seq1 (flag)=0; (data)=0;  = 3
+seq2 (flag)=1; (data)=42; = 9984
+intlv(flag)=0; (data)=42; = 13
+weak (flag)=1; (data)=0;  = 0
+[u1418973@kp360:litmus_explorer]$ 

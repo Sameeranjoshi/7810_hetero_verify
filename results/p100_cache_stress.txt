@@ -1,0 +1,21 @@
+Enter the number of loop iterations: Enter the number of tests to run: Enter the filename to test: Want compiler flags? (1(yes)|0(no)): 
+ 25%
+ 50%
+ Histogram after 1000000 runs
+seq1 (flag)=0; (data)=0;  = 171
+seq2 (flag)=1; (data)=42; = 999817
+intlv(flag)=0; (data)=42; = 12
+weak (flag)=1; (data)=0;  = 0
+
+
+ ----------------------------------------------
+
+Iterations: 1
+Test count: 1000000
+filename: cache_line_stress.cu
+
+ Results after 1 many iterations
+seq1 (flag)=0; (data)=0;  = 171
+seq2 (flag)=1; (data)=42; = 999817
+intlv(flag)=0; (data)=42; = 12
+weak (flag)=1; (data)=0;  = 0

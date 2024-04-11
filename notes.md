@@ -32,3 +32,7 @@ https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#data-prefetchin
 
 GPU Concurrency paper slides
 https://www.cis.upenn.edu/~devietti/classes/cis601-spring2017/slides/gpu-concurrency.pdf
+
+
+# Blog on memory false sharing and techniques to trigger it.
+https://www.nic.uoregon.edu/~khuck/ts/acumem-report/manual_html/multithreading_problems.html

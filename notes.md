@@ -28,3 +28,7 @@ https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#um-system-alloc
 
 Prefetching
 https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#data-prefetching
+
+
+GPU Concurrency paper slides
+https://www.cis.upenn.edu/~devietti/classes/cis601-spring2017/slides/gpu-concurrency.pdf

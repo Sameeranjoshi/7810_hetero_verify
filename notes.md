@@ -36,3 +36,7 @@ https://www.cis.upenn.edu/~devietti/classes/cis601-spring2017/slides/gpu-concurr
 
 # Blog on memory false sharing and techniques to trigger it.
 https://www.nic.uoregon.edu/~khuck/ts/acumem-report/manual_html/multithreading_problems.html
+
+
+MallocHost vs MallocManaged
+https://forums.developer.nvidia.com/t/difference-between-cudamallocmanaged-and-cudamallochost/208479/2

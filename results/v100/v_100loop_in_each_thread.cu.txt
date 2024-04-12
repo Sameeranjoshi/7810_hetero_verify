@@ -1,0 +1,13 @@
+
+ ----------------------------------------------
+Iterations: 1
+Test count: 50000
+filename: loop_in_each_thread.cu
+want_flags: 1
+flags: --threads=1024 --extra-device-vectorization --use_fast_math -O3
+
+ Results after 1 many iterations
+seq1 (flag)=0; (data)=0;  = 19634
+seq2 (flag)=1; (data)=42; = 30362
+intlv(flag)=0; (data)=42; = 4
+weak (flag)=1; (data)=0;  = 0

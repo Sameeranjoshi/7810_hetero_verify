@@ -1,0 +1,12 @@
+Results for false_sharing_base.cu saved to exe/a_100false_sharing_base.cu.txt
+Results for loop_in_each_thread.cu saved to exe/a_100loop_in_each_thread.cu.txt
+Results for weak_prefetcher_full_array.cu saved to exe/a_100weak_prefetcher_full_array.cu.txt
+Results for weak_base_modify2.cu saved to exe/a_100weak_base_modify2.cu.txt
+Results for weak_base_modify4.cu saved to exe/a_100weak_base_modify4.cu.txt
+Results for false_sharing_struct.cu saved to exe/a_100false_sharing_struct.cu.txt
+Results for weak_base_modify3_1.cu saved to exe/a_100weak_base_modify3_1.cu.txt
+Results for cache_line_stress.cu saved to exe/a_100cache_line_stress.cu.txt
+Results for weak_base.cu saved to exe/a_100weak_base.cu.txt
+Results for weak_base_modify1.cu saved to exe/a_100weak_base_modify1.cu.txt
+Results for weak_base_modify3.cu saved to exe/a_100weak_base_modify3.cu.txt
+Results for weak_prefetcher_no_array.cu saved to exe/a_100weak_prefetcher_no_array.cu.txt

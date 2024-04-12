@@ -1,0 +1,13 @@
+
+ ----------------------------------------------
+Iterations: 1
+Test count: 50000
+filename: weak_prefetcher_no_array.cu
+want_flags: 0
+flags: --threads=1024 --extra-device-vectorization --use_fast_math -O0
+
+ Results after 1 many iterations
+seq1 (flag)=0; (data)=0;  = 8242
+seq2 (flag)=1; (data)=42; = 41733
+intlv(flag)=0; (data)=42; = 25
+weak (flag)=1; (data)=0;  = 0

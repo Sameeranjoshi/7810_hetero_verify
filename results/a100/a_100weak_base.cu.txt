@@ -2,8 +2,8 @@
  ----------------------------------------------
 Iterations: 1
 Test count: 50000
-filename: weak_base_modify2.cu
-want_flags: 0
+filename: weak_base.cu
+want_flags: 1
 flags: --threads=1024 --extra-device-vectorization --use_fast_math -O3
 
  Results after 1 many iterations

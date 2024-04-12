@@ -2,12 +2,12 @@
  ----------------------------------------------
 Iterations: 1
 Test count: 50000
-filename: weak_base_modify2.cu
-want_flags: 0
+filename: weak_prefetcher_no_array.cu
+want_flags: 1
 flags: --threads=1024 --extra-device-vectorization --use_fast_math -O3
 
  Results after 1 many iterations
-seq1 (flag)=0; (data)=0;  = 0
-seq2 (flag)=1; (data)=42; = 50000
-intlv(flag)=0; (data)=42; = 0
+seq1 (flag)=0; (data)=0;  = 1011
+seq2 (flag)=1; (data)=42; = 48985
+intlv(flag)=0; (data)=42; = 4
 weak (flag)=1; (data)=0;  = 0

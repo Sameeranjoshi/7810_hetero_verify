@@ -2,7 +2,7 @@
  ----------------------------------------------
 Iterations: 1
 Test count: 50000
-filename: weak_base_modify2.cu
+filename: weak_base_modify1.cu
 want_flags: 0
 flags: --threads=1024 --extra-device-vectorization --use_fast_math -O3
 

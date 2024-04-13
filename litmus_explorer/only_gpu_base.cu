@@ -9,10 +9,10 @@ using namespace cuda;
 #include <stdio.h>
 
 // Kernel function to access data on GPU by two threads
-__global__ void accessData(atomic<int>* d_flag, int *d_data, int *d_result) {
+__global__ void accessData(atomic<int>* d_flag, int *d_data, int *d_result, int *d_buffer) {
     // int threadId = threadIdx.x;
     int threadId = threadIdx.x + blockIdx.x * blockDim.x;
-    __shared__ int buffer1[1024];
+    // __shared__ int buffer1[1024];
 
     if (threadId == 0) {    // t0 = writer
         *d_data = 42;
@@ -23,8 +23,8 @@ __global__ void accessData(atomic<int>* d_flag, int *d_data, int *d_result) {
         d_result[1] = *d_data;
     }
     else{   // stressing threads
-        for(int i=0; i< 10000; i++){
-            buffer1[threadId] = *d_data;
+        for(int i=0; i< 1000; i++){
+            d_buffer[threadId] = *d_data;
         }
     }
 
@@ -42,6 +42,7 @@ void run(Result *count_local){
     int h_data=0;
     atomic<int>* d_flag;
     int *d_data;
+    int *d_buffer;
     int h_result[2] = {99,99};
     int* d_result;
 
@@ -49,6 +50,7 @@ void run(Result *count_local){
     // Allocate memory on GPU
     cudaMalloc(&d_flag,  sizeof(atomic<int>));
     cudaMalloc(&d_data,  sizeof(int));
+    cudaMalloc(&d_buffer,  1024*sizeof(int));
     cudaMalloc(&d_result, 2*sizeof(int));
     
     // Copy data from host to device
@@ -56,7 +58,7 @@ void run(Result *count_local){
     cudaMemcpy(d_data, &h_data, sizeof(int), cudaMemcpyHostToDevice);   // init
     cudaMemcpy(d_result, &h_result, 2*sizeof(int), cudaMemcpyHostToDevice);   // init
     
-    accessData<<<1, 1024>>>(d_flag, d_data, d_result);
+    accessData<<<1, 1024>>>(d_flag, d_data, d_result, d_buffer);
 
     // Synchronize to ensure kernel finishes before accessing data
     cudaDeviceSynchronize();
@@ -88,6 +90,7 @@ void run(Result *count_local){
     // Free device memory
     cudaFree(d_flag);
     cudaFree(d_data);
+    cudaFree(d_buffer);
 
 }
 

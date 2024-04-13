@@ -15,13 +15,9 @@ __global__ void init_stress_region(int *stress_data){
     stress_data[tid] = rand();
 }
 
-    int stress_mem_region = 1024;
-    int stress_line_size = 64;
-    int word_size = 1;
-
-    int default_stress_line_offset= 0;  // index to access
-
-__global__ void consumer(atomic<int>* flag, int* data, int* result0/*flag*/, int*result1/*data*/, int *stress_data, int *stress_thread_numbers, int count_of_stress_threads) {
+__global__ void consumer(atomic<int>* flag, int* data, int* result0/*flag*/, 
+    int*result1/*data*/, int *stress_data, int *stress_thread_numbers, 
+    int stress_mem_region, int stress_line_size) {
     __shared__ int buffer1[THREADS];
     __shared__ int buffer2[THREADS];
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
@@ -30,27 +26,25 @@ __global__ void consumer(atomic<int>* flag, int* data, int* result0/*flag*/, int
         *result0 = flag->load(memory_order_relaxed);
         *result1 = *data;    
     }
-    for (int i=0; i< count_of_stress_threads; i++){
-        if (tid == stress_thread_numbers[i] && tid!=0){
-            int count_of_lines=stress_mem_region/stress_line_size;
-            // Generate a random number between 0 and count_of_lines
-            int random_line_offset = rand() % (count_of_lines + 1);
-            int random_target_offset = rand() % (stress_line_size + 1);
-            int random_target = stress_data + stress_line_size*random_line_offset + random_target_offset;
-            buffer1[tid] = stress_data[random_target];  // access this data somewhere.
+    else{
+        for (int i=0; i< count_of_stress_threads; i++){
+            if (tid == stress_thread_numbers[i] && stress_thread_numbers[i]!=0){    // make sure it's not 0 th thread.
+                int count_of_lines=stress_mem_region/stress_line_size;
+                // Generate a random number between 0 and count_of_lines
+                int random_line_offset = rand() % (count_of_lines + 1);
+                int random_target_offset = rand() % (stress_line_size + 1);
+                int random_target = stress_data + stress_line_size*random_line_offset + random_target_offset;
+                buffer1[tid] = stress_data[random_target];  // access this data somewhere.
 
-        }//else skip
-    }
-     else{ // stressing threads
-        
-
-        int counter=0;
-        while(counter!=0){
-            stress_data[];
-            stress_data[] ;
-        counter--;
+            }//else skip
         }
-    }
+    //     int counter=0;
+    //     while(counter!=0){
+    //         stress_data[];
+    //         stress_data[] ;
+    //     counter--;
+    //     }
+    // }
 }
 
 int all_are_same(const int *result) {
@@ -132,9 +126,14 @@ void run(Result *count_local){
     // Launch the consumer asynchronously
     // consumer<<<1,1>>>(flag, data, result0, result1);
     
+    int stress_mem_region = 1024;
+    int stress_line_size = 64;
+    int word_size = 1;
+
+    int stress_threads_ids[10] = {10, 20,30,40,50,60,34,99, 84, 585}; 
     // gpU
     // max go till 2 blocks and n threads.
-    consumer<<<1,1>>>(flag, data, result0, result1); 
+    consumer<<<1,1>>>(flag, data, result0, result1, &stress_data, &stress_threads_ids, stress_mem_region, stress_line_size); 
     // cudaError_t error = cudaGetLastError();
     // if (error != cudaSuccess) {
     //     printf("CUDA kernel launch error: %s\n", cudaGetErrorString(error));

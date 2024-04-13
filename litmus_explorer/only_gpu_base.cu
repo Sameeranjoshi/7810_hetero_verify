@@ -10,7 +10,9 @@ using namespace cuda;
 
 // Kernel function to access data on GPU by two threads
 __global__ void accessData(atomic<int>* d_flag, int *d_data, int *d_result) {
-    int threadId = threadIdx.x;
+    // int threadId = threadIdx.x;
+    int threadId = threadIdx.x + blockIdx.x * blockDim.x;
+    __shared__ int buffer1[1024];
 
     if (threadId == 0) {    // t0 = writer
         *d_data = 42;
@@ -19,6 +21,11 @@ __global__ void accessData(atomic<int>* d_flag, int *d_data, int *d_result) {
     if (threadId == 1) { // t1 = reader
         d_result[0] = d_flag->load(memory_order_relaxed);
         d_result[1] = *d_data;
+    }
+    else{   // stressing threads
+        for(int i=0; i< 10000; i++){
+            buffer1[threadId] = *d_data;
+        }
     }
 
 }
@@ -49,7 +56,7 @@ void run(Result *count_local){
     cudaMemcpy(d_data, &h_data, sizeof(int), cudaMemcpyHostToDevice);   // init
     cudaMemcpy(d_result, &h_result, 2*sizeof(int), cudaMemcpyHostToDevice);   // init
     
-    accessData<<<1, 2>>>(d_flag, d_data, d_result);
+    accessData<<<1, 1024>>>(d_flag, d_data, d_result);
 
     // Synchronize to ensure kernel finishes before accessing data
     cudaDeviceSynchronize();
@@ -58,7 +65,7 @@ void run(Result *count_local){
     cudaMemcpy(h_result, d_result, 2*sizeof(int), cudaMemcpyDeviceToHost);
 
     // // Print modified data
-    printf("flag: %d, data %d\n", h_result[0], h_result[1]);
+    // printf("flag: %d, data %d\n", h_result[0], h_result[1]);
 
     if (h_result[0]== 99 && h_result[1] == 99){
         printf("\n Bug in CUDA implementation! exiting");

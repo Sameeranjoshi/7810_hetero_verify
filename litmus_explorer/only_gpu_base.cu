@@ -8,10 +8,10 @@
 // BANK CONFLICT IMPLEMENTED
 // T0 AND T1 ARE NOT IN SAME SCOPE-TREE(BLOCK IN CUDA)
 // CTA = BLOCK IN CUDA = IMPLEMENTED GLOBAL INDEXING OF THREADID.
-// #include <cuda/atomic>
+#include <cuda/atomic>
 #include <cstdio>
 #include <cuda_runtime.h>
-//using namespace cuda;
+using namespace cuda;
 #include <stdio.h>
 
 
@@ -21,7 +21,7 @@ __device__ void spinLoop(int duration) {
 }
 
 // Kernel function to access data on GPU by two threads
-__global__ void accessData(int* d_flag, int *d_data, int *d_result, int *d_buffer) {
+__global__ void accessData(atomic<int>* d_flag, int *d_data, int *d_result, int *d_buffer) {
     // int threadId = threadIdx.x;
     int threadId = threadIdx.x + blockIdx.x * blockDim.x;   // testing threads
     
@@ -37,14 +37,14 @@ __global__ void accessData(int* d_flag, int *d_data, int *d_result, int *d_buffe
         spinLoop(100000);
         for (int i=0; i< 1000; i++){
             *d_data = 42;
-            *d_flag = 1; //->store(1, memory_order_relaxed);
+            d_flag->store(1, memory_order_relaxed);
         }
         spinLoop(100000);
     }
     else if (threadId == testing_t1_id) { // t1 = reader
         spinLoop(100000);
         for (int i =1000; i!=0; i--){
-            d_result[0] = *d_flag; //->load(memory_order_relaxed);
+            d_result[0] = d_flag->load(memory_order_relaxed);
             d_result[1] = *d_data;
         }
         spinLoop(100000);
@@ -81,9 +81,9 @@ int seq1, seq2, interleave, weak;
 
 void run(Result *count_local){
     
-    int h_flag=0;
+    atomic<int> h_flag=0;
     int h_data=0;
-    int* d_flag;
+    atomic<int>* d_flag;
     int *d_data;
     int *d_buffer;
     int h_result[2] = {99,99};
@@ -91,13 +91,13 @@ void run(Result *count_local){
 
 
     // Allocate memory on GPU
-    cudaMalloc(&d_flag,  sizeof(int));
+    cudaMalloc(&d_flag,  sizeof(atomic<int>));
     cudaMalloc(&d_data,  sizeof(int));
     cudaMalloc(&d_buffer,  1024*sizeof(int));
     cudaMalloc(&d_result, 2*sizeof(int));
     
     // Copy data from host to device
-    cudaMemcpy(d_flag, &h_flag, sizeof(int), cudaMemcpyHostToDevice);   // init
+    cudaMemcpy(d_flag, &h_flag, sizeof(atomic<int>), cudaMemcpyHostToDevice);   // init
     cudaMemcpy(d_data, &h_data, sizeof(int), cudaMemcpyHostToDevice);   // init
     cudaMemcpy(d_result, &h_result, 2*sizeof(int), cudaMemcpyHostToDevice);   // init
 
@@ -113,7 +113,7 @@ void run(Result *count_local){
     // Synchronize to ensure kernel finishes before accessing data
     cudaDeviceSynchronize();
 
-        cudaMemPrefetchAsync(d_flag, sizeof(int), cudaCpuDeviceId, NULL); 
+        cudaMemPrefetchAsync(d_flag, sizeof(atomic<int>), cudaCpuDeviceId, NULL); 
         cudaMemPrefetchAsync(d_data, sizeof(int), cudaCpuDeviceId, NULL); 
     // Copy data back from device to host
     cudaMemcpy(h_result, d_result, 2*sizeof(int), cudaMemcpyDeviceToHost);

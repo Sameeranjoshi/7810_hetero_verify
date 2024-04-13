@@ -1,6 +1,9 @@
-// To compile and run:
-// nvcc test.cu -arch=sm_80 -o test
-// ./test
+// WRITE INTO SCRATCHPAD
+// LOOP FOR EACH THREAD
+// <<<1,1024>>>
+// STRESSING VS TESTING THREADS
+// PREFETCH ON GPU AND CPU
+//
 
 #include <cuda/atomic>
 #include <cstdio>
@@ -15,13 +18,17 @@ __global__ void accessData(atomic<int>* d_flag, int *d_data, int *d_result, int 
     // __shared__ int buffer1[1024];
 
     if (threadId == 0) {    // t0 = writer
-        *d_data = 42;
-        d_flag->store(1, memory_order_relaxed);
+        for (int i=0; i< 1000; i++){
+            *d_data = 42;
+            d_flag->store(1, memory_order_relaxed);
+        }
     } 
-    if (threadId == 1) { // t1 = reader
-        d_result[0] = d_flag->load(memory_order_relaxed);
-        d_result[1] = *d_data;
-    }
+    else if (threadId == 1) { // t1 = reader
+        for (int i =1000; i!=0; i--){
+            d_result[0] = d_flag->load(memory_order_relaxed);
+            d_result[1] = *d_data;
+        }
+    }   
     else{   // stressing threads
         for(int i=0; i< 1000; i++){
             d_buffer[threadId] = *d_data;
@@ -57,12 +64,21 @@ void run(Result *count_local){
     cudaMemcpy(d_flag, &h_flag, sizeof(atomic<int>), cudaMemcpyHostToDevice);   // init
     cudaMemcpy(d_data, &h_data, sizeof(int), cudaMemcpyHostToDevice);   // init
     cudaMemcpy(d_result, &h_result, 2*sizeof(int), cudaMemcpyHostToDevice);   // init
-    
+
+   
+        cudaMemPrefetchAsync(d_flag, sizeof(atomic<int>), 0, NULL);         
+        cudaMemPrefetchAsync(d_data, sizeof(int), 0, NULL); 
+ 
     accessData<<<1, 1024>>>(d_flag, d_data, d_result, d_buffer);
+
+        
+        
 
     // Synchronize to ensure kernel finishes before accessing data
     cudaDeviceSynchronize();
 
+        cudaMemPrefetchAsync(d_flag, sizeof(atomic<int>), cudaCpuDeviceId, NULL); 
+        cudaMemPrefetchAsync(d_data, sizeof(int), cudaCpuDeviceId, NULL); 
     // Copy data back from device to host
     cudaMemcpy(h_result, d_result, 2*sizeof(int), cudaMemcpyDeviceToHost);
 

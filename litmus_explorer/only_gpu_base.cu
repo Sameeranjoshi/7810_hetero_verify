@@ -3,38 +3,74 @@
 // <<<1,1024>>>
 // STRESSING VS TESTING THREADS
 // PREFETCH ON GPU AND CPU
-//
-
+// PRODUCER=T0, CONSUMER=1023, MIDDLE = STRESSING THREADS
+// SPINLOOP
+// BANK CONFLICT IMPLEMENTED
+// T0 AND T1 ARE NOT IN SAME SCOPE-TREE(BLOCK IN CUDA)
+// CTA = BLOCK IN CUDA = IMPLEMENTED GLOBAL INDEXING OF THREADID.
 #include <cuda/atomic>
 #include <cstdio>
-
+#include <cuda_runtime.h>
 using namespace cuda;
 #include <stdio.h>
+
+
+__device__ void spinLoop(int duration) {
+    clock_t start = clock();
+    while ((clock() - start) < duration) {}
+}
 
 // Kernel function to access data on GPU by two threads
 __global__ void accessData(atomic<int>* d_flag, int *d_data, int *d_result, int *d_buffer) {
     // int threadId = threadIdx.x;
-    int threadId = threadIdx.x + blockIdx.x * blockDim.x;
-    // __shared__ int buffer1[1024];
+    int threadId = threadIdx.x + blockIdx.x * blockDim.x;   // testing threads
+    
+    int testing_t0_id = 0;
+    int testing_t1_id = 1022;   // scope trees different
+    int testing_warp0_id = testing_t0_id/32;
+    int testing_warp1_id = testing_t1_id/32;
 
-    if (threadId == 0) {    // t0 = writer
+    __shared__ char s_buffer1[1024];
+    __shared__ char s_buffer2[1024];
+
+    if (threadId == testing_t0_id) {    // t0 = writer
+        spinLoop(100000);
         for (int i=0; i< 1000; i++){
             *d_data = 42;
             d_flag->store(1, memory_order_relaxed);
         }
-    } 
-    else if (threadId == 1) { // t1 = reader
+        spinLoop(100000);
+    }
+    else if (threadId == testing_t1_id) { // t1 = reader
+        spinLoop(100000);
         for (int i =1000; i!=0; i--){
             d_result[0] = d_flag->load(memory_order_relaxed);
             d_result[1] = *d_data;
         }
+        spinLoop(100000);
     }   
     else{   // stressing threads
-        for(int i=0; i< 1000; i++){
-            d_buffer[threadId] = *d_data;
+        // threads in same warp - create bank conflict.
+        // statically I know 1 warp = 32 threads 
+        // find warp id of stress thread and if equal to testing thread warp id - this thred has potential to create bank conflict.
+        int stress_warp_id = threadId/32;
+
+        if(stress_warp_id == testing_warp0_id || stress_warp_id == testing_warp1_id){
+            // my stress thread is in same warp as testing thread, this will create bank conflict.
+            // s_buffer1[2*threadId] = d_data[2*threadId];  // another way of bank conflict
+            // Each thread accesses shared memory with bank conflicts
+            s_buffer1[threadId] = d_buffer[threadId % 32]; // Bank conflicts may occur here
+            __syncthreads();
+
+        } else{ // warps are not same of testing and stress threads.
+            // perform basic incantation of stressing.
+            for(int i=0; i< 1000; i++){
+                __shared__ int temp;
+                temp = *d_data;
+                d_buffer[threadId] = temp;
+            }
         }
     }
-
 }
 
 struct Result{
@@ -66,8 +102,8 @@ void run(Result *count_local){
     cudaMemcpy(d_result, &h_result, 2*sizeof(int), cudaMemcpyHostToDevice);   // init
 
    
-        cudaMemPrefetchAsync(d_flag, sizeof(atomic<int>), 0, NULL);         
-        cudaMemPrefetchAsync(d_data, sizeof(int), 0, NULL); 
+        // cudaMemPrefetchAsync(d_flag, sizeof(atomic<int>), 0, NULL);         
+        // cudaMemPrefetchAsync(d_data, sizeof(int), 0, NULL); 
  
     accessData<<<1, 1024>>>(d_flag, d_data, d_result, d_buffer);
 

@@ -23,24 +23,16 @@ __device__ void spinLoop(int duration) {
 }
 
 // Kernel function to access data on GPU by two threads
-__global__ void accessData(atomic<int>* d_flag, int *d_data, int *d_result, int *d_buffer) {
+__global__ void accessData(atomic<int>* d_flag, int *d_data, int *d_result, int *d_buffer, int tid0, int tid1) {
     int threadId = threadIdx.x + blockIdx.x * blockDim.x;   // testing threads
-    int maxThreadsPossible = blockDim.x;   // max value of threads use this for random number generator.
+    // int maxThreadsPossible = blockDim.x;   // max value of threads use this for random number generator.
 
-    int testing_t0_id = (threadId * 1103 + 12345) % (maxThreadsPossible); // can't use rand() inside kernel use custom one.
-    int testing_t1_id = ((testing_t0_id) * 1103 + 12345) % (maxThreadsPossible);   // scope trees different(1023 before rand())
+    int testing_t0_id = tid0; //(threadId * 1103 + 12345) % (maxThreadsPossible); // can't use rand() inside kernel use custom one.
+    int testing_t1_id = tid1; //((testing_t0_id) * 1103 + 12345) % (maxThreadsPossible);   // scope trees different(1023 before rand())
 
         // printf("\n tid0 = %d", testing_t0_id);
         // printf("\n tid1 = %d", testing_t1_id);
         // printf("\n maxThreadsPossible = %d", maxThreadsPossible);
-    //sanity check
-    if ((testing_t0_id < 0 || testing_t0_id > maxThreadsPossible) || (testing_t1_id < 0 || testing_t1_id > maxThreadsPossible)){
-        printf("\n Bug in CUDA implementation(tid<0 || tid>maxthreads)! exiting");
-        printf("\n tid0 = %d", testing_t0_id);
-        printf("\n tid1 = %d", testing_t1_id);
-        printf("\n maxThreadsPossible = %d", maxThreadsPossible);
-        return;
-    }
 
     // Generate random numbers within the range [0, maxThreadsPossible]
 
@@ -59,7 +51,7 @@ __global__ void accessData(atomic<int>* d_flag, int *d_data, int *d_result, int 
         spinLoop(100000);
     }
     else if (threadId == testing_t1_id) { // t1 = reader
-        printf("\n maxThreadsPossible = %d", maxThreadsPossible);
+        // printf("\n maxThreadsPossible = %d", maxThreadsPossible);
         spinLoop(100000);
         for (int i =1000; i!=0; i--){
             d_result[0] = d_flag->load(memory_order_relaxed);
@@ -86,6 +78,7 @@ __global__ void accessData(atomic<int>* d_flag, int *d_data, int *d_result, int 
                 __shared__ int temp;
                 temp = *d_data;
                 d_buffer[threadId] = temp;
+                __syncthreads();
             }
         }
     }
@@ -98,7 +91,6 @@ int seq1, seq2, interleave, weak;
 
 
 void run(Result *count_local){
-    
     atomic<int> h_flag=0;
     int h_data=0;
     atomic<int>* d_flag;
@@ -121,9 +113,38 @@ void run(Result *count_local){
 
    
         // cudaMemPrefetchAsync(d_flag, sizeof(atomic<int>), 0, NULL);         
-        // cudaMemPrefetchAsync(d_data, sizeof(int), 0, NULL); 
- 
-    accessData<<<1, 1024>>>(d_flag, d_data, d_result, d_buffer);
+        // cudaMemPrefetchAsync(d_data, sizeof(int), 0, NULL);
+    int BLOCKS = 1;
+    int THREADS= 1024; 
+
+    int maxthreadspossible = 0; // couldn't get min () to work, reverting to manual way
+    int div = THREADS/BLOCKS;
+    if (THREADS <= div){
+        maxthreadspossible = THREADS;
+    } else{
+        maxthreadspossible = div;
+    }
+    // srand(time(NULL));
+
+   // Generate t0
+    int t0 = rand() % (maxthreadspossible);
+    int t1;
+    do {
+        t1 = rand() % (maxthreadspossible);
+    } while (t1 == t0);
+
+    //sanity check
+    if ((t0 < 0 || t0 >= maxthreadspossible) || (t1 < 0 || t1 >= maxthreadspossible)){
+        printf("\n Bug in CUDA implementation(tid<0 || tid>maxthreads)! exiting");
+        printf("\n tid0 = %d", t0);
+        printf("\n tid1 = %d", t1);
+        printf("\n maxThreadsPossible = %d", maxthreadspossible);
+        return;
+    }
+
+
+    // both t0 and t1 and different
+    accessData<<<BLOCKS, THREADS>>>(d_flag, d_data, d_result, d_buffer, t0, t1);
 
     // tested data(blocks)
     // accessData<<<555, 10>>>(d_flag, d_data, d_result, d_buffer);
@@ -147,7 +168,7 @@ void run(Result *count_local){
     cudaMemcpy(h_result, d_result, 2*sizeof(int), cudaMemcpyDeviceToHost);
     
     // // Print modified data
-    printf("flag: %d, data %d\n", h_result[0], h_result[1]);
+    // printf("flag: %d, data %d\n", h_result[0], h_result[1]);
 
 
     if (h_result[0]== 99 && h_result[1] == 99){

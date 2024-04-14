@@ -129,12 +129,14 @@ void run(Result *count_local){
     } else{
         maxthreadspossible = div;
     }
-    time_t t;
-    srand((unsigned) time(&t));
+    
+    
 
    // Generate t0
-    int t0 = rand() % (maxthreadspossible);
-    int t1;
+    
+    int t0 = rand();
+    t0 = rand() % (maxthreadspossible);
+    int t1 = 1;
     do {
         t1 = rand() % (maxthreadspossible);
     } while (t1 == t0);
@@ -218,7 +220,7 @@ int main(int argc, char* argv[]) {
         }
      int loop_size = atoi(argv[1]);
      Result count_local{0};
-
+    srand(time(0));
     for (int i=0; i< loop_size; i++){
         // printf("i=%d\n", i);
         run(&count_local);

@@ -9,13 +9,14 @@
 // T0 AND T1 ARE NOT IN SAME SCOPE-TREE(BLOCK IN CUDA)
 // CTA = BLOCK IN CUDA = IMPLEMENTED GLOBAL INDEXING OF THREADID.
 // RANDOM THREAD ID
+// THREAD SYNC 
 
 #include <cuda/atomic>
 #include <cstdio>
 #include <cuda_runtime.h>
 using namespace cuda;
 #include <stdio.h>
-
+#include <time.h>
 
 __device__ void spinLoop(int duration) {
     clock_t start = clock();
@@ -42,7 +43,10 @@ __global__ void accessData(atomic<int>* d_flag, int *d_data, int *d_result, int 
     __shared__ char s_buffer1[1024];
     __shared__ char s_buffer2[1024];
 
+    // all threads have to be here at this point before we start real work.
+    // __syncthreads();       // possibly threadsync incantation.
     if (threadId == testing_t0_id) {    // t0 = writer
+        // printf("\n t0 = %d", threadId);
         spinLoop(100000);
         for (int i=0; i< 1000; i++){
             *d_data = 42;
@@ -51,6 +55,7 @@ __global__ void accessData(atomic<int>* d_flag, int *d_data, int *d_result, int 
         spinLoop(100000);
     }
     else if (threadId == testing_t1_id) { // t1 = reader
+        // printf("\n t1 =%d", threadId);
         // printf("\n maxThreadsPossible = %d", maxThreadsPossible);
         spinLoop(100000);
         for (int i =1000; i!=0; i--){
@@ -124,7 +129,8 @@ void run(Result *count_local){
     } else{
         maxthreadspossible = div;
     }
-    // srand(time(NULL));
+    time_t t;
+    srand((unsigned) time(&t));
 
    // Generate t0
     int t0 = rand() % (maxthreadspossible);
@@ -132,6 +138,7 @@ void run(Result *count_local){
     do {
         t1 = rand() % (maxthreadspossible);
     } while (t1 == t0);
+    
 
     //sanity check
     if ((t0 < 0 || t0 >= maxthreadspossible) || (t1 < 0 || t1 >= maxthreadspossible)){
@@ -142,7 +149,9 @@ void run(Result *count_local){
         return;
     }
 
-
+    printf("\n Before running CUDA kernel");
+    printf("\n Testing thread IDs: t0 = %d, t1 = %d", t0, t1);
+    printf("\n BLOCKS= %d, THREADS=%d",BLOCKS, THREADS );
     // both t0 and t1 and different
     accessData<<<BLOCKS, THREADS>>>(d_flag, d_data, d_result, d_buffer, t0, t1);
 

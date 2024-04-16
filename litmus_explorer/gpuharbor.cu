@@ -19,7 +19,7 @@ using namespace cuda;
 #include <time.h>
 
 struct Result{
-int seq1, seq2, interleave, weak;
+long int seq1, seq2, interleave, weak;
 };
 struct stress {
     int testIterations;
@@ -120,15 +120,21 @@ void setScratchLocations(int *h_locations, int numWorkgroups, struct stress* par
     }
   }
 }
-
+ 
 // Kernel function to access data on GPU by two threads
-__global__ void accessData(atomic<int> *test_locations, atomic<int> *read_results, int *shuffled_workgroups, int* barrier, int* scratchpad, int* scratch_locations, int* stress_params) {
+__global__ void accessData(atomic<int> *test_locations, atomic<int> *read_results, int *shuffled_workgroups, int* barrier, int* scratchpad, int* scratch_locations, int* stress_params, int numWorkgroups) {
     // printf("\n In kernel");
+    // for (int i=0; i< numWorkgroups ; i++){
+    //   printf("  %d", shuffled_workgroups[i]);
+    // }
     int get_group_id = blockIdx.x;
     int get_local_size = blockDim.x;
     int get_local_id = threadIdx.x;
 
     int shuffled_workgroup = shuffled_workgroups[get_group_id]; // blockIdx.x
+    // printf("\n shuffled_workgroup = %d", shuffled_workgroup);
+    // printf("\n get_group_id = %d", get_group_id);
+    // printf("\n stress_params[9] = %d", stress_params[9]);
   if(shuffled_workgroup < stress_params[9]) {
     int total_ids = get_local_size * stress_params[9];  // blockDim.x
     int id_0 = shuffled_workgroup * get_local_size + get_local_id; // get_local_id() = threadIdx.x
@@ -139,21 +145,28 @@ __global__ void accessData(atomic<int> *test_locations, atomic<int> *read_result
     int p2 = (id_0 * stress_params[8]) % total_ids;
     int p3 = (id_1 * stress_params[8]) % total_ids;
     int x_0 = (id_0) * stress_params[10] * 2;
+    // printf("\n x_0 = %d", x_0);
+    // printf("\n stress_params[10] = %d", stress_params[10]);
+    // printf("\n id_0 = %d", id_0);
+    // printf("\n get_local_size = %d", get_local_size);
+    // printf("\n get_local_id = %d", get_local_id);
+    
     int y_0 = p2 * stress_params[10] * 2 + stress_params[11];
     int x_1 = (id_1) * stress_params[10] * 2;
     int y_1 = p3 * stress_params[10] * 2 + stress_params[11];
-
-    // 
+    // printf("\n id1 = %d", id_1);
+    // printf("\n X[0] = %d, Y[0] = %d", x_0, y_0);
+    // printf("\n X[1] = %d, Y[1] = %d", x_1, y_1);
     test_locations[x_0].store(1, memory_order_relaxed);
-    test_locations[y_0].store(1, memory_order_relaxed);
+    test_locations[y_0].store(42, memory_order_relaxed);
     int r0 = test_locations[y_1].load(memory_order_relaxed);
     int r1 = test_locations[x_1].load(memory_order_relaxed);
-    read_results[id_1 * 2 + 1].store(r1, memory_order_relaxed);
-    read_results[id_1 * 2].store(r0, memory_order_relaxed);
+    read_results[id_1 * 2 + 1].store(r1, memory_order_relaxed); // r1 = data
+    read_results[id_1 * 2].store(r0, memory_order_relaxed); // r0 = flag
 
-    if (r0 == 1 && r1 == 0){
-        printf("\n Weak found");
-    }
+    // if (r0 == 1 && r1 == 0){
+    //     printf("\n Weak found");
+    // }
     // atomic_store(&read_results[id_1 * 2 + 1], r1);
     // atomic_store(&read_results[id_1 * 2], r0);
   }
@@ -286,6 +299,7 @@ void run(Result *count_local){
     // pointers
     atomic<int>* testLocations;
     atomic<int>*readResults;
+    atomic<int>*h_readResults = (atomic<int>*)malloc(test_params.numOutputs * testingThreads * sizeof(atomic<int>));
     int* shuffledWorkgroups;
     int* barrier;
     int* scratchpad;
@@ -329,14 +343,14 @@ void run(Result *count_local){
 
     int* h_shuffledWorkgroups = (int *)malloc(numWorkgroups*sizeof(int));   // on cpu used for copying.
     setShuffledWorkgroups(h_shuffledWorkgroups, numWorkgroups, stress_params.shufflePct);   // random indexes
-    cudaMemcpy(shuffledWorkgroups, &h_shuffledWorkgroups, numWorkgroups * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(shuffledWorkgroups, h_shuffledWorkgroups, numWorkgroups * sizeof(int), cudaMemcpyHostToDevice);
 
     int* h_scratchLocations = (int *)malloc(numWorkgroups*sizeof(int));   // on cpu used for copying.
     setScratchLocations(h_scratchLocations, numWorkgroups, &stress_params);   // random indexes
+    // THIS MIGHT BE BUG, REMOVE & IF SEGFAULT/ILLEGAL MEM ACCESS
     cudaMemcpy(scratchLocations, &h_scratchLocations, numWorkgroups * sizeof(int), cudaMemcpyHostToDevice);
 
-    accessData<<<BLOCKS, THREADS>>>(testLocations, readResults, shuffledWorkgroups, barrier, scratchpad, scratchLocations, stressParams);
-    // accessData<<<BLOCKS, THREADS>>>(d_flag, d_data, d_result, d_buffer, t0, t1); 
+    accessData<<<BLOCKS, THREADS>>>(testLocations, readResults, shuffledWorkgroups, barrier, scratchpad, scratchLocations, stressParams, numWorkgroups);
     // Synchronize to ensure kernel finishes before accessing data
     cudaDeviceSynchronize();
 
@@ -346,34 +360,38 @@ void run(Result *count_local){
         exit(1);
     }
     // Copy data back from device to host
-    cudaMemcpy(h_result, d_result, 2*sizeof(int), cudaMemcpyDeviceToHost);
-    
+    cudaMemcpy(h_readResults, readResults, test_params.numOutputs * testingThreads * sizeof(atomic<int>), cudaMemcpyDeviceToHost);
     // // Print modified data
     // printf("flag: %d, data %d\n", h_result[0], h_result[1]);
 
-
-    if (h_result[0]== 99 && h_result[1] == 99){
-        printf("\n Bug in CUDA implementation! exiting");
-        exit(1);
+    cudaDeviceSynchronize();
+    int counter=1;
+    for (int i=0; i< test_params.numOutputs*testingThreads; i = i+2)
+    {
+      atomic<int> data/*r0*/ = h_readResults[i].load();
+      atomic<int> flag/*r1*/ = h_readResults[i+1].load();
+      // printf(" %d-%d ", data, flag);
+      //r0=flag, r1=data
+        if (flag.load() == 0 && data.load() == 0){
+            count_local->seq1 += 1 ;  //# t2->t1
+        }
+        else if(flag.load() == 1 && data.load() == 42){
+            count_local->seq2 += 1 ;  //# t1-t2
+        }
+        else if(flag.load() == 0 && data.load() == 42){
+            count_local->interleave += 1;
+        }
+        else if(flag.load() == 1 && data.load() == 0){
+            count_local->weak += 1;
+        }
+        counter++;
     }
-    error = cudaGetLastError();
-    if (error != cudaSuccess) {
-        printf("CUDA error: %s\n", cudaGetErrorString(error));
-        exit(1);
-    }            
-     //r0=flag, r1=data
-    if (h_result[0] == 0 && h_result[1] == 0){
-        count_local->seq1 += 1 ;  //# t1->t2
-    }
-    else if(h_result[0] == 1 && h_result[1] == 42){
-        count_local->seq2 += 1 ;  //# t2-t1
-    }
-    else if(h_result[0] == 0 && h_result[1] == 42){
-        count_local->interleave += 1;
-    }
-    else if(h_result[0] == 1 && h_result[1] == 0){
-        count_local->weak += 1;
-    }
+    printf("\n Total result elements = %d", counter);
+    // if (h_result[0]== 99 && h_result[1] == 99){
+    //     printf("\n Bug in CUDA implementation! exiting");
+    //     exit(1);
+    // }          
+   
     free(h_shuffledWorkgroups);
 
     // Free device memory

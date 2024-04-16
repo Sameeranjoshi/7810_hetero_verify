@@ -296,9 +296,6 @@ void run(Result *count_local){
 
     int* h_scratchLocations = (int *)malloc(numWorkgroups*sizeof(int));   // on cpu used for copying.
     setScratchLocations(h_scratchLocations, numWorkgroups, &stress_params);   // random indexes
-    for (int i=0; i< numWorkgroups; i++){
-        printf(" %d", h_scratchLocations[i]);
-    }
     cudaMemcpy(scratchLocations, &h_scratchLocations, numWorkgroups * sizeof(int), cudaMemcpyHostToDevice);
 
     int t0=0, t1= 1;

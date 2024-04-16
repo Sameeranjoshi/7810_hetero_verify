@@ -37,23 +37,24 @@ int setBetween(int min, int max) {
   }
 }
 
-// bool percentageCheck(int percentage) {
-//   return rand() % 100 < percentage;
-// }
+bool percentageCheck(int percentage) {
+  bool x = rand() % 100 < percentage;
+  return x;
+}
 
-// void setShuffledWorkgroups(Buffer &shuffledWorkgroups, int numWorkgroups, int shufflePct) {
-//   for (int i = 0; i < numWorkgroups; i++) {
-//     shuffledWorkgroups.store<uint32_t>(i, i);
-//   }
-//   if (percentageCheck(shufflePct)) {
-//     for (int i = numWorkgroups - 1; i > 0; i--) {
-//       int swap = rand() % (i + 1);
-//       int temp = shuffledWorkgroups.load<uint32_t>(i);
-//       shuffledWorkgroups.store<uint32_t>(i, shuffledWorkgroups.load<uint32_t>(swap));
-//       shuffledWorkgroups.store<uint32_t>(swap, temp);
-//     }
-//   }
-// }
+void setShuffledWorkgroups(int* h_shuffledWorkgroups, int numWorkgroups, int shufflePct) {
+  for (int i = 0; i < numWorkgroups; i++) {
+    h_shuffledWorkgroups[i] = i;
+  }
+  if (percentageCheck(shufflePct)) {
+    for (int i = numWorkgroups - 1; i > 0; i--) {
+      int swap = rand() % (i + 1);
+      int temp = h_shuffledWorkgroups[i];
+      h_shuffledWorkgroups[i] = h_shuffledWorkgroups[swap];
+      h_shuffledWorkgroups[swap] = temp;
+    }
+  }
+}
 
 
 // Kernel function to access data on GPU by two threads
@@ -205,8 +206,6 @@ void run(Result *count_local){
     int testingThreads = stress_params.workgroupSize * stress_params.testingWorkgroups;
     int testLocSize = testingThreads * test_params.numMemLocations * stress_params.memStride;
 
-    printf("\n testingThreads : %d", testingThreads);
-    printf("\n testLocSize : %d", testLocSize);
     // init other variables
     atomic<int> h_flag=0;
     int h_data=0;
@@ -223,6 +222,7 @@ void run(Result *count_local){
     int* scratchpad;
     int* scratchLocations;
     int* stressParams;
+    
 
 
     // Allocate memory on GPU
@@ -257,6 +257,11 @@ void run(Result *count_local){
     int workGroupSize = stress_params.workgroupSize;    //1
     int BLOCKS = numWorkgroups; // 1024
     int THREADS= workGroupSize; // 1 
+
+    int* h_shuffledWorkgroups = (int *)malloc(numWorkgroups*sizeof(int));   // on cpu used for copying.
+    setShuffledWorkgroups(h_shuffledWorkgroups, numWorkgroups, stress_params.shufflePct);   // random indexes
+    cudaMemcpy(shuffledWorkgroups, &h_shuffledWorkgroups, numWorkgroups * sizeof(int), cudaMemcpyHostToDevice);
+
 
     int t0=0, t1= 1;
     accessData<<<BLOCKS, THREADS>>>(d_flag, d_data, d_result, d_buffer, t0, t1);
@@ -293,6 +298,7 @@ void run(Result *count_local){
     else if(h_result[0] == 1 && h_result[1] == 0){
         count_local->weak += 1;
     }
+    free(h_shuffledWorkgroups);
 
     // Free device memory
     cudaFree(d_flag);
@@ -309,7 +315,8 @@ int main(int argc, char* argv[]) {
         }
      int loop_size = atoi(argv[1]);
      Result count_local{0};
-    srand(time(0));
+    // srand(time(0));
+    srand(time(NULL));
     for (int i=0; i< loop_size; i++){
         // printf("i=%d\n", i);
         run(&count_local);

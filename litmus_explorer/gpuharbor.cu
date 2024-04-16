@@ -28,6 +28,14 @@ __global__ void print_verify_init_ok_gpu(int *barrier){
         printf("\n %d = %d", i, barrier[i]);
     }
 }
+int setBetween(int min, int max) {
+  if (min == max) {
+    return min;
+  } else {
+    int size = rand() % (max - min);
+    return min + size;
+  }
+}
 
 // Kernel function to access data on GPU by two threads
 __global__ void accessData(atomic<int>* d_flag, int *d_data, int *d_result, int *d_buffer, int tid0, int tid1) {
@@ -215,44 +223,48 @@ void run(Result *count_local){
     // Initialize
     cudaMemset(testLocations, 0, testLocSize * sizeof(int));
     cudaMemcpy(stressParams, &h_stressParams, 12 * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemset(barrier, 0, 1 * sizeof(int));
+    cudaMemset(scratchpad, 0, stress_params.scratchMemorySize * sizeof(int));
     // Copy data from host to device
     cudaMemcpy(d_flag, &h_flag, sizeof(atomic<int>), cudaMemcpyHostToDevice);   // init
     cudaMemcpy(d_data, &h_data, sizeof(int), cudaMemcpyHostToDevice);   // init
     cudaMemcpy(d_result, &h_result, 2*sizeof(int), cudaMemcpyHostToDevice);   // init
-
-   
 //    print_verify_init_ok_gpu<<<1,1>>>(stressParams);
-    int BLOCKS = 1;
-    int THREADS= 1024; 
+   
+// ---------------------------------------------------------------
+    //for (int i = 0; i < stress_params.testIterations; i++) {
 
-    int maxthreadspossible = 0; // couldn't get min () to work, reverting to manual way
-    int div = THREADS/BLOCKS;
-    if (THREADS <= div){
-        maxthreadspossible = THREADS;
-    } else{
-        maxthreadspossible = div;
-    }
+    int numWorkgroups = setBetween(stress_params.testingWorkgroups, stress_params.maxWorkgroups);   // basically blocks
+    int workGroupSize = stress_params.workgroupSize;    //1
+    int BLOCKS = numWorkgroups; // 1024
+    int THREADS= workGroupSize; // 1 
+
+    // int maxthreadspossible = 0; // couldn't get min () to work, reverting to manual way
+    // int div = THREADS/BLOCKS;
+    // if (THREADS <= div){
+    //     maxthreadspossible = THREADS;
+    // } else{
+    //     maxthreadspossible = div;
+    // }
     
+//    // Generate t0
+    
+//     int t0 = rand();
+//     t0 = rand() % (maxthreadspossible);
+//     int t1 = 1;
+//     do {
+//         t1 = rand() % (maxthreadspossible);
+//     } while (t1 == t0);
     
 
-   // Generate t0
-    
-    int t0 = rand();
-    t0 = rand() % (maxthreadspossible);
-    int t1 = 1;
-    do {
-        t1 = rand() % (maxthreadspossible);
-    } while (t1 == t0);
-    
-
-    //sanity check
-    if ((t0 < 0 || t0 >= maxthreadspossible) || (t1 < 0 || t1 >= maxthreadspossible)){
-        printf("\n Bug in CUDA implementation(tid<0 || tid>maxthreads)! exiting");
-        printf("\n tid0 = %d", t0);
-        printf("\n tid1 = %d", t1);
-        printf("\n maxThreadsPossible = %d", maxthreadspossible);
-        return;
-    }
+//     //sanity check
+//     if ((t0 < 0 || t0 >= maxthreadspossible) || (t1 < 0 || t1 >= maxthreadspossible)){
+//         printf("\n Bug in CUDA implementation(tid<0 || tid>maxthreads)! exiting");
+//         printf("\n tid0 = %d", t0);
+//         printf("\n tid1 = %d", t1);
+//         printf("\n maxThreadsPossible = %d", maxthreadspossible);
+//         return;
+//     }
 
 	//printf("\n Before running CUDA kernel");
     	//printf("\n Testing thread IDs: t2 = %d, t1 = %d", t0, t1);

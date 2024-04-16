@@ -23,6 +23,12 @@ __device__ void spinLoop(int duration) {
     while ((clock() - start) < duration) {}
 }
 
+__global__ void print_verify_init_ok_gpu(int *barrier){
+    for (int i=0; i< 12; i++){
+        printf("\n %d = %d", i, barrier[i]);
+    }
+}
+
 // Kernel function to access data on GPU by two threads
 __global__ void accessData(atomic<int>* d_flag, int *d_data, int *d_result, int *d_buffer, int tid0, int tid1) {
     int threadId = threadIdx.x + blockIdx.x * blockDim.x;   // testing threads
@@ -92,10 +98,89 @@ __global__ void accessData(atomic<int>* d_flag, int *d_data, int *d_result, int 
 struct Result{
 int seq1, seq2, interleave, weak;
 };
-
-
+struct stress {
+    int testIterations;
+    int testingWorkgroups;
+    int maxWorkgroups;
+    int workgroupSize;
+    int shufflePct;
+    int barrierPct;
+    int stressLineSize;
+    int stressTargetLines;
+    int scratchMemorySize;
+    int memStride;
+    int memStressPct;
+    int memStressIterations;
+    int memStressPattern;
+    int preStressPct;
+    int preStressIterations;
+    int preStressPattern;
+    int stressAssignmentStrategy;
+    int permuteThread;
+};
+struct test {
+    int numOutputs;
+    int numMemLocations;
+    int numResults;
+    int permuteLocation;
+    int aliasedMemory;
+    int workgroupMemory;
+    int checkMemory;
+};
 
 void run(Result *count_local){
+    // init struct
+    struct stress stress_params = {
+        .testIterations = 1,
+        .testingWorkgroups = 1024,
+        .maxWorkgroups = 1024,
+        .workgroupSize = 1,
+        .shufflePct = 0,
+        .barrierPct = 0,
+        .stressLineSize = 1,
+        .stressTargetLines = 0,
+        .scratchMemorySize = 1,
+        .memStride = 1,
+        .memStressPct = 0,
+        .memStressIterations = 0,
+        .memStressPattern = 0,
+        .preStressPct = 0,
+        .preStressIterations = 0,
+        .preStressPattern = 0,
+        .stressAssignmentStrategy = 0,
+        .permuteThread = 0
+    };
+    struct test test_params = {
+        .numOutputs=2,
+        .numMemLocations=1,
+        .numResults=4,
+        .permuteLocation=1031,
+        .aliasedMemory=0,
+        .workgroupMemory=0,
+        .checkMemory=0
+    };
+  
+    // 0, 1, 4 are dynamic values, keeping 0 for now.
+    int h_stressParams[12] = {  0,  /*0*/
+                                0,  /*1*/
+                                stress_params.memStressIterations, 
+                                stress_params.memStressPattern,
+                                0,  /*4 - dynamic value*/
+                                stress_params.preStressIterations,
+                                stress_params.preStressPattern, 
+                                stress_params.permuteThread, 
+                                test_params.permuteLocation,
+                                stress_params.testingWorkgroups,
+                                stress_params.memStride,
+                                (test_params.aliasedMemory == 1) ? 0 : stress_params.memStride
+                                };
+
+    int testingThreads = stress_params.workgroupSize * stress_params.testingWorkgroups;
+    int testLocSize = testingThreads * test_params.numMemLocations * stress_params.memStride;
+
+    printf("\n testingThreads : %d", testingThreads);
+    printf("\n testLocSize : %d", testLocSize);
+    // init other variables
     atomic<int> h_flag=0;
     int h_data=0;
     atomic<int>* d_flag;
@@ -104,19 +189,39 @@ void run(Result *count_local){
     int h_result[2] = {99,99};
     int* d_result;
 
+    // pointers
+    int* testLocations;
+    int* shuffledWorkgroups;
+    int* barrier;
+    int* scratchpad;
+    int* scratchLocations;
+    int* stressParams;
+
 
     // Allocate memory on GPU
     cudaMalloc(&d_flag,  sizeof(atomic<int>));
     cudaMalloc(&d_data,  sizeof(int));
     cudaMalloc(&d_buffer,  1024*sizeof(int));
     cudaMalloc(&d_result, 2*sizeof(int));
+    // allocations
+    cudaMalloc(&testLocations, testLocSize*sizeof(int));
+    cudaMalloc(&shuffledWorkgroups, stress_params.maxWorkgroups * sizeof(int));
+    cudaMalloc(&barrier, 1 * sizeof(int));
+    cudaMalloc(&scratchpad, stress_params.scratchMemorySize * sizeof(int));
+    cudaMalloc(&scratchLocations, stress_params.maxWorkgroups * sizeof(int));
+    cudaMalloc(&stressParams, 12 * sizeof(int));
     
+    
+    // Initialize
+    cudaMemset(testLocations, 0, testLocSize * sizeof(int));
+    cudaMemcpy(stressParams, &h_stressParams, 12 * sizeof(int), cudaMemcpyHostToDevice);
     // Copy data from host to device
     cudaMemcpy(d_flag, &h_flag, sizeof(atomic<int>), cudaMemcpyHostToDevice);   // init
     cudaMemcpy(d_data, &h_data, sizeof(int), cudaMemcpyHostToDevice);   // init
     cudaMemcpy(d_result, &h_result, 2*sizeof(int), cudaMemcpyHostToDevice);   // init
 
    
+//    print_verify_init_ok_gpu<<<1,1>>>(stressParams);
     int BLOCKS = 1;
     int THREADS= 1024; 
 

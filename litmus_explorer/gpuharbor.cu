@@ -122,7 +122,7 @@ void setScratchLocations(int *h_locations, int numWorkgroups, struct stress* par
 }
 
 // Kernel function to access data on GPU by two threads
-__global__ void accessData(atomic<int> *test_locations, int *shuffled_workgroups, int* barrier, int* scratchpad, int* scratch_locations, int* stress_params) {
+__global__ void accessData(atomic<int> *test_locations, atomic<int> *read_results, int *shuffled_workgroups, int* barrier, int* scratchpad, int* scratch_locations, int* stress_params) {
     // printf("\n In kernel");
     int get_group_id = blockIdx.x;
     int get_local_size = blockDim.x;
@@ -143,14 +143,14 @@ __global__ void accessData(atomic<int> *test_locations, int *shuffled_workgroups
     int x_1 = (id_1) * stress_params[10] * 2;
     int y_1 = p3 * stress_params[10] * 2 + stress_params[11];
 
-//             d_result[0] = d_flag->load(memory_order_relaxed);
-//             d_result[1] = *d_data;
-//             *d_data = 42;
-//             d_flag->store(1, memory_order_relaxed);
+    // 
     test_locations[x_0].store(1, memory_order_relaxed);
     test_locations[y_0].store(1, memory_order_relaxed);
     int r0 = test_locations[y_1].load(memory_order_relaxed);
     int r1 = test_locations[x_1].load(memory_order_relaxed);
+    read_results[id_1 * 2 + 1].store(r1, memory_order_relaxed);
+    read_results[id_1 * 2].store(r0, memory_order_relaxed);
+
     if (r0 == 1 && r1 == 0){
         printf("\n Weak found");
     }
@@ -285,6 +285,7 @@ void run(Result *count_local){
 
     // pointers
     atomic<int>* testLocations;
+    atomic<int>*readResults;
     int* shuffledWorkgroups;
     int* barrier;
     int* scratchpad;
@@ -300,12 +301,12 @@ void run(Result *count_local){
     cudaMalloc(&d_result, 2*sizeof(int));
     // allocations
     cudaMalloc(&testLocations, testLocSize*sizeof(atomic<int>));
+    cudaMalloc(&readResults, test_params.numOutputs * testingThreads * sizeof(atomic<int>));
     cudaMalloc(&shuffledWorkgroups, stress_params.maxWorkgroups * sizeof(int));
     cudaMalloc(&barrier, 1 * sizeof(int));
     cudaMalloc(&scratchpad, stress_params.scratchMemorySize * sizeof(int));
     cudaMalloc(&scratchLocations, stress_params.maxWorkgroups * sizeof(int));
     cudaMalloc(&stressParams, 12 * sizeof(int));
-    
     
     // Initialize
     cudaMemset(testLocations, 0, testLocSize * sizeof(atomic<int>));
@@ -334,7 +335,7 @@ void run(Result *count_local){
     setScratchLocations(h_scratchLocations, numWorkgroups, &stress_params);   // random indexes
     cudaMemcpy(scratchLocations, &h_scratchLocations, numWorkgroups * sizeof(int), cudaMemcpyHostToDevice);
 
-    accessData<<<BLOCKS, THREADS>>>(testLocations, shuffledWorkgroups, barrier, scratchpad, scratchLocations, stressParams);
+    accessData<<<BLOCKS, THREADS>>>(testLocations, readResults, shuffledWorkgroups, barrier, scratchpad, scratchLocations, stressParams);
     // accessData<<<BLOCKS, THREADS>>>(d_flag, d_data, d_result, d_buffer, t0, t1); 
     // Synchronize to ensure kernel finishes before accessing data
     cudaDeviceSynchronize();

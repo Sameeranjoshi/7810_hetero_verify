@@ -18,6 +18,39 @@ using namespace cuda;
 #include <stdio.h>
 #include <time.h>
 
+struct Result{
+int seq1, seq2, interleave, weak;
+};
+struct stress {
+    int testIterations;
+    int testingWorkgroups;
+    int maxWorkgroups;
+    int workgroupSize;
+    int shufflePct;
+    int barrierPct;
+    int stressLineSize;
+    int stressTargetLines;
+    int scratchMemorySize;
+    int memStride;
+    int memStressPct;
+    int memStressIterations;
+    int memStressPattern;
+    int preStressPct;
+    int preStressIterations;
+    int preStressPattern;
+    int stressAssignmentStrategy;
+    int permuteThread;
+};
+struct test {
+    int numOutputs;
+    int numMemLocations;
+    int numResults;
+    int permuteLocation;
+    int aliasedMemory;
+    int workgroupMemory;
+    int checkMemory;
+};
+
 __device__ void spinLoop(int duration) {
     clock_t start = clock();
     while ((clock() - start) < duration) {}
@@ -52,6 +85,38 @@ void setShuffledWorkgroups(int* h_shuffledWorkgroups, int numWorkgroups, int shu
       int temp = h_shuffledWorkgroups[i];
       h_shuffledWorkgroups[i] = h_shuffledWorkgroups[swap];
       h_shuffledWorkgroups[swap] = temp;
+    }
+  }
+}
+
+void setScratchLocations(int *h_locations, int numWorkgroups, struct stress* params) {
+//   set <int> usedRegions;
+  int numRegions = params->scratchMemorySize / params->stressLineSize;
+  for (int i = 0; i < params->stressTargetLines; i++) {
+    int region = rand() % numRegions;
+    int counter=100;
+    while(counter!=0){
+      region = rand() % numRegions;
+      counter--;
+    }
+    int locInRegion = rand() % (params->stressLineSize);
+    switch (params->stressAssignmentStrategy) {
+      case 0:
+        for (int j = i; j < numWorkgroups; j += params->stressTargetLines) {
+          h_locations[j] = ((region * params->stressLineSize) + locInRegion);
+        }
+        break;
+      case 1:
+        int workgroupsPerLocation = numWorkgroups/params->stressTargetLines;
+        for (int j = 0; j < workgroupsPerLocation; j++) {
+          h_locations[i*workgroupsPerLocation + j] =  ((region * params->stressLineSize) + locInRegion);
+        }
+        if (i == params->stressTargetLines - 1 && numWorkgroups % params->stressTargetLines != 0) {
+          for (int j = 0; j < numWorkgroups % params->stressTargetLines; j++) {
+            h_locations[numWorkgroups - j - 1] = ((region * params->stressLineSize) + locInRegion);
+          }
+        }
+        break;
     }
   }
 }
@@ -122,39 +187,6 @@ __global__ void accessData(atomic<int>* d_flag, int *d_data, int *d_result, int 
         }
     }
 }
-
-struct Result{
-int seq1, seq2, interleave, weak;
-};
-struct stress {
-    int testIterations;
-    int testingWorkgroups;
-    int maxWorkgroups;
-    int workgroupSize;
-    int shufflePct;
-    int barrierPct;
-    int stressLineSize;
-    int stressTargetLines;
-    int scratchMemorySize;
-    int memStride;
-    int memStressPct;
-    int memStressIterations;
-    int memStressPattern;
-    int preStressPct;
-    int preStressIterations;
-    int preStressPattern;
-    int stressAssignmentStrategy;
-    int permuteThread;
-};
-struct test {
-    int numOutputs;
-    int numMemLocations;
-    int numResults;
-    int permuteLocation;
-    int aliasedMemory;
-    int workgroupMemory;
-    int checkMemory;
-};
 
 void run(Result *count_local){
     // init struct
@@ -262,6 +294,12 @@ void run(Result *count_local){
     setShuffledWorkgroups(h_shuffledWorkgroups, numWorkgroups, stress_params.shufflePct);   // random indexes
     cudaMemcpy(shuffledWorkgroups, &h_shuffledWorkgroups, numWorkgroups * sizeof(int), cudaMemcpyHostToDevice);
 
+    int* h_scratchLocations = (int *)malloc(numWorkgroups*sizeof(int));   // on cpu used for copying.
+    setScratchLocations(h_scratchLocations, numWorkgroups, &stress_params);   // random indexes
+    for (int i=0; i< numWorkgroups; i++){
+        printf(" %d", h_scratchLocations[i]);
+    }
+    cudaMemcpy(scratchLocations, &h_scratchLocations, numWorkgroups * sizeof(int), cudaMemcpyHostToDevice);
 
     int t0=0, t1= 1;
     accessData<<<BLOCKS, THREADS>>>(d_flag, d_data, d_result, d_buffer, t0, t1);

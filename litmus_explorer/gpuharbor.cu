@@ -122,71 +122,71 @@ void setScratchLocations(int *h_locations, int numWorkgroups, struct stress* par
 }
 
 
-// Kernel function to access data on GPU by two threads
-__global__ void accessData(atomic<int>* d_flag, int *d_data, int *d_result, int *d_buffer, int tid0, int tid1) {
-    int threadId = threadIdx.x + blockIdx.x * blockDim.x;   // testing threads
-    // int maxThreadsPossible = blockDim.x;   // max value of threads use this for random number generator.
+// // Kernel function to access data on GPU by two threads
+// __global__ void accessData(atomic<int>* d_flag, int *d_data, int *d_result, int *d_buffer, int tid0, int tid1) {
+//     int threadId = threadIdx.x + blockIdx.x * blockDim.x;   // testing threads
+//     // int maxThreadsPossible = blockDim.x;   // max value of threads use this for random number generator.
 
-    int testing_t0_id = tid0; //(threadId * 1103 + 12345) % (maxThreadsPossible); // can't use rand() inside kernel use custom one.
-    int testing_t1_id = tid1; //((testing_t0_id) * 1103 + 12345) % (maxThreadsPossible);   // scope trees different(1023 before rand())
+//     int testing_t0_id = tid0; //(threadId * 1103 + 12345) % (maxThreadsPossible); // can't use rand() inside kernel use custom one.
+//     int testing_t1_id = tid1; //((testing_t0_id) * 1103 + 12345) % (maxThreadsPossible);   // scope trees different(1023 before rand())
 
-        // printf("\n tid0 = %d", testing_t0_id);
-        // printf("\n tid1 = %d", testing_t1_id);
-        // printf("\n maxThreadsPossible = %d", maxThreadsPossible);
+//         // printf("\n tid0 = %d", testing_t0_id);
+//         // printf("\n tid1 = %d", testing_t1_id);
+//         // printf("\n maxThreadsPossible = %d", maxThreadsPossible);
 
-    // Generate random numbers within the range [0, maxThreadsPossible]
+//     // Generate random numbers within the range [0, maxThreadsPossible]
 
-    int testing_warp0_id = testing_t0_id/32;
-    int testing_warp1_id = testing_t1_id/32;
+//     int testing_warp0_id = testing_t0_id/32;
+//     int testing_warp1_id = testing_t1_id/32;
 
-    __shared__ char s_buffer1[1024];
-    __shared__ char s_buffer2[1024];
+//     __shared__ char s_buffer1[1024];
+//     __shared__ char s_buffer2[1024];
 
-    // all threads have to be here at this point before we start real work.
-    // __syncthreads();       // possibly threadsync incantation.
-    if (threadId == testing_t0_id) {    // t0 = writer
-        // printf("\n t0 = %d", threadId);
-        spinLoop(100000);
-        for (int i=0; i< 1000; i++){
-            *d_data = 42;
-            d_flag->store(1, memory_order_relaxed);
-        }
-        spinLoop(100000);
-    }
-    else if (threadId == testing_t1_id) { // t1 = reader
-        // printf("\n t1 =%d", threadId);
-        // printf("\n maxThreadsPossible = %d", maxThreadsPossible);
-        spinLoop(100000);
-        for (int i =1000; i!=0; i--){
-            d_result[0] = d_flag->load(memory_order_relaxed);
-            d_result[1] = *d_data;
-        }
-        spinLoop(100000);
-    }   
-    else{   // stressing threads
-        // threads in same warp - create bank conflict.
-        // statically I know 1 warp = 32 threads 
-        // find warp id of stress thread and if equal to testing thread warp id - this thred has potential to create bank conflict.
-        int stress_warp_id = threadId/32;
+//     // all threads have to be here at this point before we start real work.
+//     // __syncthreads();       // possibly threadsync incantation.
+//     if (threadId == testing_t0_id) {    // t0 = writer
+//         // printf("\n t0 = %d", threadId);
+//         spinLoop(100000);
+//         for (int i=0; i< 1000; i++){
+//             *d_data = 42;
+//             d_flag->store(1, memory_order_relaxed);
+//         }
+//         spinLoop(100000);
+//     }
+//     else if (threadId == testing_t1_id) { // t1 = reader
+//         // printf("\n t1 =%d", threadId);
+//         // printf("\n maxThreadsPossible = %d", maxThreadsPossible);
+//         spinLoop(100000);
+//         for (int i =1000; i!=0; i--){
+//             d_result[0] = d_flag->load(memory_order_relaxed);
+//             d_result[1] = *d_data;
+//         }
+//         spinLoop(100000);
+//     }   
+//     else{   // stressing threads
+//         // threads in same warp - create bank conflict.
+//         // statically I know 1 warp = 32 threads 
+//         // find warp id of stress thread and if equal to testing thread warp id - this thred has potential to create bank conflict.
+//         int stress_warp_id = threadId/32;
 
-        if(stress_warp_id == testing_warp0_id || stress_warp_id == testing_warp1_id){
-            // my stress thread is in same warp as testing thread, this will create bank conflict.
-            // s_buffer1[2*threadId] = d_data[2*threadId];  // another way of bank conflict
-            // Each thread accesses shared memory with bank conflicts
-            s_buffer1[threadId] = d_buffer[threadId % 32]; // Bank conflicts may occur here
-            __syncthreads();
+//         if(stress_warp_id == testing_warp0_id || stress_warp_id == testing_warp1_id){
+//             // my stress thread is in same warp as testing thread, this will create bank conflict.
+//             // s_buffer1[2*threadId] = d_data[2*threadId];  // another way of bank conflict
+//             // Each thread accesses shared memory with bank conflicts
+//             s_buffer1[threadId] = d_buffer[threadId % 32]; // Bank conflicts may occur here
+//             __syncthreads();
 
-        } else{ // warps are not same of testing and stress threads.
-            // perform basic incantation of stressing.
-            for(int i=0; i< 1000; i++){
-                __shared__ int temp;
-                temp = *d_data;
-                d_buffer[threadId] = temp;
-                __syncthreads();
-            }
-        }
-    }
-}
+//         } else{ // warps are not same of testing and stress threads.
+//             // perform basic incantation of stressing.
+//             for(int i=0; i< 1000; i++){
+//                 __shared__ int temp;
+//                 temp = *d_data;
+//                 d_buffer[threadId] = temp;
+//                 __syncthreads();
+//             }
+//         }
+//     }
+// }
 
 void run(Result *count_local){
     // init struct
@@ -299,7 +299,7 @@ void run(Result *count_local){
     cudaMemcpy(scratchLocations, &h_scratchLocations, numWorkgroups * sizeof(int), cudaMemcpyHostToDevice);
 
     int t0=0, t1= 1;
-    accessData<<<BLOCKS, THREADS>>>(d_flag, d_data, d_result, d_buffer, t0, t1);
+    // accessData<<<BLOCKS, THREADS>>>(d_flag, d_data, d_result, d_buffer, t0, t1);
 
     // Synchronize to ensure kernel finishes before accessing data
     cudaDeviceSynchronize();

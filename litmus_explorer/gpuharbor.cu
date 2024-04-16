@@ -121,7 +121,43 @@ void setScratchLocations(int *h_locations, int numWorkgroups, struct stress* par
   }
 }
 
+// Kernel function to access data on GPU by two threads
+__global__ void accessData(atomic<int> *test_locations, int *shuffled_workgroups, int* barrier, int* scratchpad, int* scratch_locations, int* stress_params) {
+    // printf("\n In kernel");
+    int get_group_id = blockIdx.x;
+    int get_local_size = blockDim.x;
+    int get_local_id = threadIdx.x;
 
+    int shuffled_workgroup = shuffled_workgroups[get_group_id]; // blockIdx.x
+  if(shuffled_workgroup < stress_params[9]) {
+    int total_ids = get_local_size * stress_params[9];  // blockDim.x
+    int id_0 = shuffled_workgroup * get_local_size + get_local_id; // get_local_id() = threadIdx.x
+    // int new_workgroup = stripe_workgroup(shuffled_workgroup, get_local_id, stress_params[9]);
+    int new_workgroup = (shuffled_workgroup + 1 + get_local_id %(stress_params[9] - 1)) % stress_params[9];
+    int p1 = (get_local_id*stress_params[7]) % get_local_size;
+    int id_1 = new_workgroup * get_local_size + p1; 
+    int p2 = (id_0 * stress_params[8]) % total_ids;
+    int p3 = (id_1 * stress_params[8]) % total_ids;
+    int x_0 = (id_0) * stress_params[10] * 2;
+    int y_0 = p2 * stress_params[10] * 2 + stress_params[11];
+    int x_1 = (id_1) * stress_params[10] * 2;
+    int y_1 = p3 * stress_params[10] * 2 + stress_params[11];
+
+//             d_result[0] = d_flag->load(memory_order_relaxed);
+//             d_result[1] = *d_data;
+//             *d_data = 42;
+//             d_flag->store(1, memory_order_relaxed);
+    test_locations[x_0].store(1, memory_order_relaxed);
+    test_locations[y_0].store(1, memory_order_relaxed);
+    int r0 = test_locations[y_1].load(memory_order_relaxed);
+    int r1 = test_locations[x_1].load(memory_order_relaxed);
+    if (r0 == 1 && r1 == 0){
+        printf("\n Weak found");
+    }
+    // atomic_store(&read_results[id_1 * 2 + 1], r1);
+    // atomic_store(&read_results[id_1 * 2], r0);
+  }
+}
 // // Kernel function to access data on GPU by two threads
 // __global__ void accessData(atomic<int>* d_flag, int *d_data, int *d_result, int *d_buffer, int tid0, int tid1) {
 //     int threadId = threadIdx.x + blockIdx.x * blockDim.x;   // testing threads
@@ -248,7 +284,7 @@ void run(Result *count_local){
     int* d_result;
 
     // pointers
-    int* testLocations;
+    atomic<int>* testLocations;
     int* shuffledWorkgroups;
     int* barrier;
     int* scratchpad;
@@ -263,7 +299,7 @@ void run(Result *count_local){
     cudaMalloc(&d_buffer,  1024*sizeof(int));
     cudaMalloc(&d_result, 2*sizeof(int));
     // allocations
-    cudaMalloc(&testLocations, testLocSize*sizeof(int));
+    cudaMalloc(&testLocations, testLocSize*sizeof(atomic<int>));
     cudaMalloc(&shuffledWorkgroups, stress_params.maxWorkgroups * sizeof(int));
     cudaMalloc(&barrier, 1 * sizeof(int));
     cudaMalloc(&scratchpad, stress_params.scratchMemorySize * sizeof(int));
@@ -272,7 +308,7 @@ void run(Result *count_local){
     
     
     // Initialize
-    cudaMemset(testLocations, 0, testLocSize * sizeof(int));
+    cudaMemset(testLocations, 0, testLocSize * sizeof(atomic<int>));
     cudaMemcpy(stressParams, &h_stressParams, 12 * sizeof(int), cudaMemcpyHostToDevice);
     cudaMemset(barrier, 0, 1 * sizeof(int));
     cudaMemset(scratchpad, 0, stress_params.scratchMemorySize * sizeof(int));
@@ -298,12 +334,16 @@ void run(Result *count_local){
     setScratchLocations(h_scratchLocations, numWorkgroups, &stress_params);   // random indexes
     cudaMemcpy(scratchLocations, &h_scratchLocations, numWorkgroups * sizeof(int), cudaMemcpyHostToDevice);
 
-    int t0=0, t1= 1;
-    // accessData<<<BLOCKS, THREADS>>>(d_flag, d_data, d_result, d_buffer, t0, t1);
-
+    accessData<<<BLOCKS, THREADS>>>(testLocations, shuffledWorkgroups, barrier, scratchpad, scratchLocations, stressParams);
+    // accessData<<<BLOCKS, THREADS>>>(d_flag, d_data, d_result, d_buffer, t0, t1); 
     // Synchronize to ensure kernel finishes before accessing data
     cudaDeviceSynchronize();
 
+    cudaError_t error = cudaGetLastError();
+    if (error != cudaSuccess) {
+        printf("CUDA error: %s\n", cudaGetErrorString(error));
+        exit(1);
+    }
     // Copy data back from device to host
     cudaMemcpy(h_result, d_result, 2*sizeof(int), cudaMemcpyDeviceToHost);
     
@@ -315,7 +355,7 @@ void run(Result *count_local){
         printf("\n Bug in CUDA implementation! exiting");
         exit(1);
     }
-    cudaError_t error = cudaGetLastError();
+    error = cudaGetLastError();
     if (error != cudaSuccess) {
         printf("CUDA error: %s\n", cudaGetErrorString(error));
         exit(1);

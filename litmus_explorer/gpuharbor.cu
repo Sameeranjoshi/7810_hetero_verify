@@ -37,6 +37,25 @@ int setBetween(int min, int max) {
   }
 }
 
+// bool percentageCheck(int percentage) {
+//   return rand() % 100 < percentage;
+// }
+
+// void setShuffledWorkgroups(Buffer &shuffledWorkgroups, int numWorkgroups, int shufflePct) {
+//   for (int i = 0; i < numWorkgroups; i++) {
+//     shuffledWorkgroups.store<uint32_t>(i, i);
+//   }
+//   if (percentageCheck(shufflePct)) {
+//     for (int i = numWorkgroups - 1; i > 0; i--) {
+//       int swap = rand() % (i + 1);
+//       int temp = shuffledWorkgroups.load<uint32_t>(i);
+//       shuffledWorkgroups.store<uint32_t>(i, shuffledWorkgroups.load<uint32_t>(swap));
+//       shuffledWorkgroups.store<uint32_t>(swap, temp);
+//     }
+//   }
+// }
+
+
 // Kernel function to access data on GPU by two threads
 __global__ void accessData(atomic<int>* d_flag, int *d_data, int *d_result, int *d_buffer, int tid0, int tid1) {
     int threadId = threadIdx.x + blockIdx.x * blockDim.x;   // testing threads
@@ -239,37 +258,7 @@ void run(Result *count_local){
     int BLOCKS = numWorkgroups; // 1024
     int THREADS= workGroupSize; // 1 
 
-    // int maxthreadspossible = 0; // couldn't get min () to work, reverting to manual way
-    // int div = THREADS/BLOCKS;
-    // if (THREADS <= div){
-    //     maxthreadspossible = THREADS;
-    // } else{
-    //     maxthreadspossible = div;
-    // }
-    
-//    // Generate t0
-    
-//     int t0 = rand();
-//     t0 = rand() % (maxthreadspossible);
-//     int t1 = 1;
-//     do {
-//         t1 = rand() % (maxthreadspossible);
-//     } while (t1 == t0);
-    
-
-//     //sanity check
-//     if ((t0 < 0 || t0 >= maxthreadspossible) || (t1 < 0 || t1 >= maxthreadspossible)){
-//         printf("\n Bug in CUDA implementation(tid<0 || tid>maxthreads)! exiting");
-//         printf("\n tid0 = %d", t0);
-//         printf("\n tid1 = %d", t1);
-//         printf("\n maxThreadsPossible = %d", maxthreadspossible);
-//         return;
-//     }
-
-	//printf("\n Before running CUDA kernel");
-    	//printf("\n Testing thread IDs: t2 = %d, t1 = %d", t0, t1);
-    	//printf("\n BLOCKS= %d, THREADS=%d",BLOCKS, THREADS );
-    // both t0 and t1 and different
+    int t0=0, t1= 1;
     accessData<<<BLOCKS, THREADS>>>(d_flag, d_data, d_result, d_buffer, t0, t1);
 
     // Synchronize to ensure kernel finishes before accessing data

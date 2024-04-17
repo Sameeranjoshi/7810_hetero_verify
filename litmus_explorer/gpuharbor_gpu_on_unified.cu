@@ -251,20 +251,30 @@ void run(Result *count_local){
     cudaMallocManaged(&stressParams, 12 * sizeof(int));
     
     // Initialize
-    cudaMemset(testLocations, 0, testLocSize * sizeof(atomic<int>));
-    cudaMemcpy(stressParams, &h_stressParams, 12 * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemset(barrier, 0, 1 * sizeof(int));
-    cudaMemset(scratchpad, 0, stress_params.scratchMemorySize * sizeof(int));
+    //cudaMemset(testLocations, 0, testLocSize * sizeof(atomic<int>));
+    for (int i=0; i<testLocSize; i++){
+      testLocations[i].store(0);
+    }
+    // cudaMemcpy(stressParams, &h_stressParams, 12 * sizeof(int), cudaMemcpyHostToDevice);
+    for (int i=0; i<12; i++){
+      stressParams[i] = h_stressParams[i];
+    }
+    // cudaMemset(barrier, 0, 1 * sizeof(int));
+    barrier = 0;
+    // cudaMemset(scratchpad, 0, stress_params.scratchMemorySize * sizeof(int));
+    for (int i=0; i< stress_params.scratchMemorySize; i++){
+      scratchpad[i] = 0;
+    }
     // Copy data from host to device
    
 // ---------------------------------------------------------------
   for (int i = 0; i < stress_params.testIterations; i++) {
     // host params
-    int else__=0;
-    int globalVar_weak = 0;
-    int globalVar_seq1 = 0;
-    int globalVar_seq2 = 0;
-    int globalVar_interleave = 0;
+    // int else__=0;
+    // int globalVar_weak = 0;
+    // int globalVar_seq1 = 0;
+    // int globalVar_seq2 = 0;
+    // int globalVar_interleave = 0;
     //device params    
     int* d_globalVar_weak;
     int *d_else__;
@@ -274,15 +284,20 @@ void run(Result *count_local){
 
 
     cudaMallocManaged(&d_else__, sizeof(int));
-    cudaMemcpy(d_else__, &else__, sizeof(int), cudaMemcpyHostToDevice);
+    // cudaMemcpy(d_else__, &else__, sizeof(int), cudaMemcpyHostToDevice);
+    *d_else__ = 0;
     cudaMallocManaged(&d_globalVar_weak, sizeof(int));
-    cudaMemcpy(d_globalVar_weak, &globalVar_weak, sizeof(int), cudaMemcpyHostToDevice);
+    // cudaMemcpy(d_globalVar_weak, &globalVar_weak, sizeof(int), cudaMemcpyHostToDevice);
+    *d_globalVar_weak = 0;
     cudaMallocManaged(&d_globalVar_seq1, sizeof(int));
-    cudaMemcpy(d_globalVar_seq1, &globalVar_seq1, sizeof(int), cudaMemcpyHostToDevice);
+    // cudaMemcpy(d_globalVar_seq1, &globalVar_seq1, sizeof(int), cudaMemcpyHostToDevice);
+    *d_globalVar_seq1 = 0;
     cudaMallocManaged(&d_globalVar_seq2, sizeof(int));
-    cudaMemcpy(d_globalVar_seq2, &globalVar_seq2, sizeof(int), cudaMemcpyHostToDevice);
+    // cudaMemcpy(d_globalVar_seq2, &globalVar_seq2, sizeof(int), cudaMemcpyHostToDevice);
+    *d_globalVar_seq2 = 0;
     cudaMallocManaged(&d_globalVar_interleave, sizeof(int));
-    cudaMemcpy(d_globalVar_interleave, &globalVar_interleave, sizeof(int), cudaMemcpyHostToDevice);
+    // cudaMemcpy(d_globalVar_interleave, &globalVar_interleave, sizeof(int), cudaMemcpyHostToDevice);
+    *d_globalVar_interleave = 0;
     
     // init sizes
     int numWorkgroups = setBetween(stress_params.testingWorkgroups, stress_params.maxWorkgroups);   // basically blocks
@@ -295,9 +310,15 @@ void run(Result *count_local){
     // Real shuffling algorithm
 
     setShuffledWorkgroups(h_shuffledWorkgroups, numWorkgroups, stress_params.shufflePct);   // random indexes
-    cudaMemcpy(shuffledWorkgroups, h_shuffledWorkgroups, numWorkgroups * sizeof(int), cudaMemcpyHostToDevice);
+    // cudaMemcpy(shuffledWorkgroups, h_shuffledWorkgroups, numWorkgroups * sizeof(int), cudaMemcpyHostToDevice);
+    for(int i=0; i< numWorkgroups; i++){
+      shuffledWorkgroups[i] = h_shuffledWorkgroups[i];
+    }
     setScratchLocations(h_scratchLocations, numWorkgroups, &stress_params);   // random indexes
-    cudaMemcpy(scratchLocations, h_scratchLocations, numWorkgroups * sizeof(int), cudaMemcpyHostToDevice);
+    // cudaMemcpy(scratchLocations, h_scratchLocations, numWorkgroups * sizeof(int), cudaMemcpyHostToDevice);
+    for(int i=0; i< numWorkgroups; i++){
+      scratchLocations[i] = h_scratchLocations[i];
+    }
 
     ////////////////////////////////////////////
     accessData<<<BLOCKS, THREADS>>>(testLocations, readResults, shuffledWorkgroups, barrier, scratchpad, scratchLocations, stressParams, numWorkgroups, d_globalVar_weak, d_globalVar_seq1, d_globalVar_seq2,d_globalVar_interleave, d_else__);
@@ -306,11 +327,11 @@ void run(Result *count_local){
     cudaDeviceSynchronize();
     
     // Copy back to device
-    cudaMemcpy(&globalVar_weak, d_globalVar_weak, sizeof(int), cudaMemcpyDeviceToHost);
-    cudaMemcpy(&else__, d_else__, sizeof(int), cudaMemcpyDeviceToHost);
-    cudaMemcpy(&globalVar_seq1, d_globalVar_seq1, sizeof(int), cudaMemcpyDeviceToHost);
-    cudaMemcpy(&globalVar_seq2, d_globalVar_seq2, sizeof(int), cudaMemcpyDeviceToHost);
-    cudaMemcpy(&globalVar_interleave, d_globalVar_interleave, sizeof(int), cudaMemcpyDeviceToHost);
+    // cudaMemcpy(&globalVar_weak, d_globalVar_weak, sizeof(int), cudaMemcpyDeviceToHost);
+    // cudaMemcpy(&else__, d_else__, sizeof(int), cudaMemcpyDeviceToHost);
+    // cudaMemcpy(&globalVar_seq1, d_globalVar_seq1, sizeof(int), cudaMemcpyDeviceToHost);
+    // cudaMemcpy(&globalVar_seq2, d_globalVar_seq2, sizeof(int), cudaMemcpyDeviceToHost);
+    // cudaMemcpy(&globalVar_interleave, d_globalVar_interleave, sizeof(int), cudaMemcpyDeviceToHost);
 
     // check if any errors from kernel side
     cudaError_t error = cudaGetLastError();
@@ -328,10 +349,10 @@ void run(Result *count_local){
     // printf("Total behaviors: %d\n", totalbeh);
     cudaDeviceSynchronize();
     // global result capture
-    count_local->seq1 += globalVar_seq1;
-    count_local->seq2 += globalVar_seq2;
-    count_local->interleave += globalVar_interleave;
-    count_local->weak += globalVar_weak;
+    count_local->seq1 += (*d_globalVar_seq1);
+    count_local->seq2 += (*d_globalVar_seq2);
+    count_local->interleave += (*d_globalVar_interleave);
+    count_local->weak += (*d_globalVar_weak);
     
     // Free device memory and host mem.
 

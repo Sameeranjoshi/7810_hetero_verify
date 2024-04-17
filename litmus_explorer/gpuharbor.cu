@@ -120,21 +120,30 @@ void setScratchLocations(int *h_locations, int numWorkgroups, struct stress* par
     }
   }
 }
- 
+
+void useless(){
+    // printf("\n x_0 = %d", x_0);
+    // printf("\n stress_params[10] = %d", stress_params[10]);
+    // printf("\n id_0 = %d", id_0);
+    // printf("\n get_local_size = %d", get_local_size);
+    // printf("\n get_local_id = %d", get_local_id);
+    // printf("\n id1 = %d", id_1);
+    // printf("\n X[0] = %d, Y[0] = %d", x_0, y_0);
+    // printf("\n X[1] = %d, Y[1] = %d", x_1, y_1);
+    // printf("\n shuffled_workgroup = %d", shuffled_workgroup);
+    // printf("\n get_group_id = %d", get_group_id);
+    // printf("\n stress_params[9] = %d", stress_params[9]);    
+ }
+
 // Kernel function to access data on GPU by two threads
-__global__ void accessData(atomic<int> *test_locations, atomic<int> *read_results, int *shuffled_workgroups, int* barrier, int* scratchpad, int* scratch_locations, int* stress_params, int numWorkgroups) {
-    // printf("\n In kernel");
-    // for (int i=0; i< numWorkgroups ; i++){
-    //   printf("  %d", shuffled_workgroups[i]);
-    // }
+__global__ void accessData(atomic<int> *test_locations, atomic<int> *read_results, int *shuffled_workgroups, int* barrier, int* scratchpad, int* scratch_locations, int* stress_params, int numWorkgroups, int*globalVar_weak, int *globalVar_seq1, int *globalVar_seq2, int* globalVar_interleave, int *else__) {
+    atomicAdd(else__, 1);
     int get_group_id = blockIdx.x;
     int get_local_size = blockDim.x;
     int get_local_id = threadIdx.x;
 
     int shuffled_workgroup = shuffled_workgroups[get_group_id]; // blockIdx.x
-    // printf("\n shuffled_workgroup = %d", shuffled_workgroup);
-    // printf("\n get_group_id = %d", get_group_id);
-    // printf("\n stress_params[9] = %d", stress_params[9]);
+
   if(shuffled_workgroup < stress_params[9]) {
     int total_ids = get_local_size * stress_params[9];  // blockDim.x
     int id_0 = shuffled_workgroup * get_local_size + get_local_id; // get_local_id() = threadIdx.x
@@ -145,102 +154,36 @@ __global__ void accessData(atomic<int> *test_locations, atomic<int> *read_result
     int p2 = (id_0 * stress_params[8]) % total_ids;
     int p3 = (id_1 * stress_params[8]) % total_ids;
     int x_0 = (id_0) * stress_params[10] * 2;
-    // printf("\n x_0 = %d", x_0);
-    // printf("\n stress_params[10] = %d", stress_params[10]);
-    // printf("\n id_0 = %d", id_0);
-    // printf("\n get_local_size = %d", get_local_size);
-    // printf("\n get_local_id = %d", get_local_id);
-    
     int y_0 = p2 * stress_params[10] * 2 + stress_params[11];
     int x_1 = (id_1) * stress_params[10] * 2;
     int y_1 = p3 * stress_params[10] * 2 + stress_params[11];
-    // printf("\n id1 = %d", id_1);
-    // printf("\n X[0] = %d, Y[0] = %d", x_0, y_0);
-    // printf("\n X[1] = %d, Y[1] = %d", x_1, y_1);
-    test_locations[x_0].store(1, memory_order_relaxed);
-    test_locations[y_0].store(42, memory_order_relaxed);
-    int r0 = test_locations[y_1].load(memory_order_relaxed);
-    int r1 = test_locations[x_1].load(memory_order_relaxed);
+ 
+    test_locations[x_0].store(1, memory_order_relaxed); // data
+    test_locations[y_0].store(1, memory_order_relaxed);  // flag
+    
+    int r0 = test_locations[y_1].load(memory_order_relaxed);  // flag
+    int r1 = test_locations[x_1].load(memory_order_relaxed);  // data
     read_results[id_1 * 2 + 1].store(r1, memory_order_relaxed); // r1 = data
     read_results[id_1 * 2].store(r0, memory_order_relaxed); // r0 = flag
-
-    // if (r0 == 1 && r1 == 0){
-    //     printf("\n Weak found");
-    // }
-    // atomic_store(&read_results[id_1 * 2 + 1], r1);
-    // atomic_store(&read_results[id_1 * 2], r0);
+    // id_capture[id_1*2] = r0;
+    if (r0 == 1 && r1 == 0){
+      atomicAdd(globalVar_weak, 1);
+    } else if (r0==1 && r1 == 1){
+      atomicAdd(globalVar_seq2, 1);
+    } else if (r0==0 && r1==0){
+      atomicAdd(globalVar_seq1, 1);
+    } else if (r0==0 && r1 == 1){
+      atomicAdd(globalVar_interleave, 1);
+    }else{
+      printf("\n r0=%d, r1=%d", r0, r1);
+    }
   }
 }
-// // Kernel function to access data on GPU by two threads
-// __global__ void accessData(atomic<int>* d_flag, int *d_data, int *d_result, int *d_buffer, int tid0, int tid1) {
-//     int threadId = threadIdx.x + blockIdx.x * blockDim.x;   // testing threads
-//     // int maxThreadsPossible = blockDim.x;   // max value of threads use this for random number generator.
-
-//     int testing_t0_id = tid0; //(threadId * 1103 + 12345) % (maxThreadsPossible); // can't use rand() inside kernel use custom one.
-//     int testing_t1_id = tid1; //((testing_t0_id) * 1103 + 12345) % (maxThreadsPossible);   // scope trees different(1023 before rand())
-
-//         // printf("\n tid0 = %d", testing_t0_id);
-//         // printf("\n tid1 = %d", testing_t1_id);
-//         // printf("\n maxThreadsPossible = %d", maxThreadsPossible);
-
-//     // Generate random numbers within the range [0, maxThreadsPossible]
-
-//     int testing_warp0_id = testing_t0_id/32;
-//     int testing_warp1_id = testing_t1_id/32;
-
-//     __shared__ char s_buffer1[1024];
-//     __shared__ char s_buffer2[1024];
-
-//     // all threads have to be here at this point before we start real work.
-//     // __syncthreads();       // possibly threadsync incantation.
-//     if (threadId == testing_t0_id) {    // t0 = writer
-//         // printf("\n t0 = %d", threadId);
-//         spinLoop(100000);
-//         for (int i=0; i< 1000; i++){
-//             *d_data = 42;
-//             d_flag->store(1, memory_order_relaxed);
-//         }
-//         spinLoop(100000);
-//     }
-//     else if (threadId == testing_t1_id) { // t1 = reader
-//         // printf("\n t1 =%d", threadId);
-//         // printf("\n maxThreadsPossible = %d", maxThreadsPossible);
-//         spinLoop(100000);
-//         for (int i =1000; i!=0; i--){
-//             d_result[0] = d_flag->load(memory_order_relaxed);
-//             d_result[1] = *d_data;
-//         }
-//         spinLoop(100000);
-//     }   
-//     else{   // stressing threads
-//         // threads in same warp - create bank conflict.
-//         // statically I know 1 warp = 32 threads 
-//         // find warp id of stress thread and if equal to testing thread warp id - this thred has potential to create bank conflict.
-//         int stress_warp_id = threadId/32;
-
-//         if(stress_warp_id == testing_warp0_id || stress_warp_id == testing_warp1_id){
-//             // my stress thread is in same warp as testing thread, this will create bank conflict.
-//             // s_buffer1[2*threadId] = d_data[2*threadId];  // another way of bank conflict
-//             // Each thread accesses shared memory with bank conflicts
-//             s_buffer1[threadId] = d_buffer[threadId % 32]; // Bank conflicts may occur here
-//             __syncthreads();
-
-//         } else{ // warps are not same of testing and stress threads.
-//             // perform basic incantation of stressing.
-//             for(int i=0; i< 1000; i++){
-//                 __shared__ int temp;
-//                 temp = *d_data;
-//                 d_buffer[threadId] = temp;
-//                 __syncthreads();
-//             }
-//         }
-//     }
-// }
 
 void run(Result *count_local){
     // init struct
     struct stress stress_params = {
-        .testIterations = 1,
+        .testIterations = 10,
         .testingWorkgroups = 1024,
         .maxWorkgroups = 1024,
         .workgroupSize = 1,
@@ -287,15 +230,6 @@ void run(Result *count_local){
     int testingThreads = stress_params.workgroupSize * stress_params.testingWorkgroups;
     int testLocSize = testingThreads * test_params.numMemLocations * stress_params.memStride;
 
-    // init other variables
-    atomic<int> h_flag=0;
-    int h_data=0;
-    atomic<int>* d_flag;
-    int *d_data;
-    int *d_buffer;
-    int h_result[2] = {99,99};
-    int* d_result;
-
     // pointers
     atomic<int>* testLocations;
     atomic<int>*readResults;
@@ -307,12 +241,6 @@ void run(Result *count_local){
     int* stressParams;
     
 
-
-    // Allocate memory on GPU
-    cudaMalloc(&d_flag,  sizeof(atomic<int>));
-    cudaMalloc(&d_data,  sizeof(int));
-    cudaMalloc(&d_buffer,  1024*sizeof(int));
-    cudaMalloc(&d_result, 2*sizeof(int));
     // allocations
     cudaMalloc(&testLocations, testLocSize*sizeof(atomic<int>));
     cudaMalloc(&readResults, test_params.numOutputs * testingThreads * sizeof(atomic<int>));
@@ -328,104 +256,106 @@ void run(Result *count_local){
     cudaMemset(barrier, 0, 1 * sizeof(int));
     cudaMemset(scratchpad, 0, stress_params.scratchMemorySize * sizeof(int));
     // Copy data from host to device
-    cudaMemcpy(d_flag, &h_flag, sizeof(atomic<int>), cudaMemcpyHostToDevice);   // init
-    cudaMemcpy(d_data, &h_data, sizeof(int), cudaMemcpyHostToDevice);   // init
-    cudaMemcpy(d_result, &h_result, 2*sizeof(int), cudaMemcpyHostToDevice);   // init
-//    print_verify_init_ok_gpu<<<1,1>>>(stressParams);
    
 // ---------------------------------------------------------------
-    //for (int i = 0; i < stress_params.testIterations; i++) {
+  for (int i = 0; i < stress_params.testIterations; i++) {
+    // host params
+    int else__=0;
+    int globalVar_weak = 0;
+    int globalVar_seq1 = 0;
+    int globalVar_seq2 = 0;
+    int globalVar_interleave = 0;
+    //device params    
+    int* d_globalVar_weak;
+    int *d_else__;
+    int* d_globalVar_seq1;
+    int* d_globalVar_seq2;
+    int* d_globalVar_interleave;
 
+
+    cudaMalloc(&d_else__, sizeof(int));
+    cudaMemcpy(d_else__, &else__, sizeof(int), cudaMemcpyHostToDevice);
+    cudaMalloc(&d_globalVar_weak, sizeof(int));
+    cudaMemcpy(d_globalVar_weak, &globalVar_weak, sizeof(int), cudaMemcpyHostToDevice);
+    cudaMalloc(&d_globalVar_seq1, sizeof(int));
+    cudaMemcpy(d_globalVar_seq1, &globalVar_seq1, sizeof(int), cudaMemcpyHostToDevice);
+    cudaMalloc(&d_globalVar_seq2, sizeof(int));
+    cudaMemcpy(d_globalVar_seq2, &globalVar_seq2, sizeof(int), cudaMemcpyHostToDevice);
+    cudaMalloc(&d_globalVar_interleave, sizeof(int));
+    cudaMemcpy(d_globalVar_interleave, &globalVar_interleave, sizeof(int), cudaMemcpyHostToDevice);
+    
+    // init sizes
     int numWorkgroups = setBetween(stress_params.testingWorkgroups, stress_params.maxWorkgroups);   // basically blocks
     int workGroupSize = stress_params.workgroupSize;    //1
+    int* h_shuffledWorkgroups = (int *)malloc(numWorkgroups*sizeof(int));   // on cpu used for copying.
+    int* h_scratchLocations = (int *)malloc(numWorkgroups*sizeof(int));   // on cpu used for copying.
     int BLOCKS = numWorkgroups; // 1024
     int THREADS= workGroupSize; // 1 
 
-    int* h_shuffledWorkgroups = (int *)malloc(numWorkgroups*sizeof(int));   // on cpu used for copying.
+    // Real shuffling algorithm
+
     setShuffledWorkgroups(h_shuffledWorkgroups, numWorkgroups, stress_params.shufflePct);   // random indexes
     cudaMemcpy(shuffledWorkgroups, h_shuffledWorkgroups, numWorkgroups * sizeof(int), cudaMemcpyHostToDevice);
-
-    int* h_scratchLocations = (int *)malloc(numWorkgroups*sizeof(int));   // on cpu used for copying.
     setScratchLocations(h_scratchLocations, numWorkgroups, &stress_params);   // random indexes
-    // THIS MIGHT BE BUG, REMOVE & IF SEGFAULT/ILLEGAL MEM ACCESS
-    cudaMemcpy(scratchLocations, &h_scratchLocations, numWorkgroups * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(scratchLocations, h_scratchLocations, numWorkgroups * sizeof(int), cudaMemcpyHostToDevice);
 
-    accessData<<<BLOCKS, THREADS>>>(testLocations, readResults, shuffledWorkgroups, barrier, scratchpad, scratchLocations, stressParams, numWorkgroups);
+    ////////////////////////////////////////////
+    accessData<<<BLOCKS, THREADS>>>(testLocations, readResults, shuffledWorkgroups, barrier, scratchpad, scratchLocations, stressParams, numWorkgroups, d_globalVar_weak, d_globalVar_seq1, d_globalVar_seq2,d_globalVar_interleave, d_else__);
+    ////////////////////////////////////////////
     // Synchronize to ensure kernel finishes before accessing data
     cudaDeviceSynchronize();
+    
+    // Copy back to device
+    cudaMemcpy(&globalVar_weak, d_globalVar_weak, sizeof(int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(&else__, d_else__, sizeof(int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(&globalVar_seq1, d_globalVar_seq1, sizeof(int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(&globalVar_seq2, d_globalVar_seq2, sizeof(int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(&globalVar_interleave, d_globalVar_interleave, sizeof(int), cudaMemcpyDeviceToHost);
 
+    // check if any errors from kernel side
     cudaError_t error = cudaGetLastError();
     if (error != cudaSuccess) {
         printf("CUDA error: %s\n", cudaGetErrorString(error));
         exit(1);
     }
-    // Copy data back from device to host
-    cudaMemcpy(h_readResults, readResults, test_params.numOutputs * testingThreads * sizeof(atomic<int>), cudaMemcpyDeviceToHost);
-    // // Print modified data
-    // printf("flag: %d, data %d\n", h_result[0], h_result[1]);
 
+    // result printing
+    // int totalbeh = globalVar_interleave + globalVar_seq1 + globalVar_seq2 + globalVar_weak;
+    // printf("seq1 behaviors: %d\n", globalVar_seq1);
+    // printf("seq2 behaviors: %d\n", globalVar_seq2);
+    // printf("interlv behaviors: %d\n", globalVar_interleave);
+    // printf("weak behaviors: %d\n", globalVar_weak);
+    // printf("Total behaviors: %d\n", totalbeh);
     cudaDeviceSynchronize();
-    int counter=1;
-    for (int i=0; i< test_params.numOutputs*testingThreads; i = i+2)
-    {
-      atomic<int> data/*r0*/ = h_readResults[i].load();
-      atomic<int> flag/*r1*/ = h_readResults[i+1].load();
-      // printf(" %d-%d ", data, flag);
-      //r0=flag, r1=data
-        if (flag.load() == 0 && data.load() == 0){
-            count_local->seq1 += 1 ;  //# t2->t1
-        }
-        else if(flag.load() == 1 && data.load() == 42){
-            count_local->seq2 += 1 ;  //# t1-t2
-        }
-        else if(flag.load() == 0 && data.load() == 42){
-            count_local->interleave += 1;
-        }
-        else if(flag.load() == 1 && data.load() == 0){
-            count_local->weak += 1;
-        }
-        counter++;
-    }
-    printf("\n Total result elements = %d", counter);
-    // if (h_result[0]== 99 && h_result[1] == 99){
-    //     printf("\n Bug in CUDA implementation! exiting");
-    //     exit(1);
-    // }          
-   
+    // global result capture
+    count_local->seq1 += globalVar_seq1;
+    count_local->seq2 += globalVar_seq2;
+    count_local->interleave += globalVar_interleave;
+    count_local->weak += globalVar_weak;
+    
+    // Free device memory and host mem.
+
     free(h_shuffledWorkgroups);
-
-    // Free device memory
-    cudaFree(d_flag);
-    cudaFree(d_data);
-    cudaFree(d_buffer);
-
+    cudaFree(d_globalVar_weak);
+    cudaFree(d_else__);
+    cudaFree(d_globalVar_seq1);
+    cudaFree(d_globalVar_seq2);
+    cudaFree(d_globalVar_interleave);
+  }
+    
 }
 
 
 int main(int argc, char* argv[]) {
-        if (argc !=2 ){
-            printf("\n ./a.out <number of tests>");
-            exit(1);
-        }
-     int loop_size = atoi(argv[1]);
-     Result count_local{0};
-    // srand(time(0));
-    srand(time(NULL));
-    for (int i=0; i< loop_size; i++){
-        // printf("i=%d\n", i);
-        run(&count_local);
-        if (i == loop_size/4){
-            printf("\n 25%%");
-        } else if (i == loop_size/2){
-            printf("\n 50%%");
-        }
-    }
+  Result count_local{0};
+  srand(time(NULL));
+  run(&count_local);
 
-    printf("\n Histogram after %d runs\n", loop_size);
-    printf("seq1 (flag)=0; (data)=0;  = %d\n", count_local.seq1);
-    printf("seq2 (flag)=1; (data)=42; = %d\n", count_local.seq2);
-    printf("intlv(flag)=0; (data)=42; = %d\n", count_local.interleave);
-    printf("weak (flag)=1; (data)=0;  = %d\n", count_local.weak);
-
-    return 0;
+  int total = count_local.seq1 + count_local.seq2 + count_local.interleave + count_local.weak;
+  printf("\n Histogram after %d runs\n", total);
+  printf("seq1 (flag)=0; (data)=0;  = %d\n", count_local.seq1);
+  printf("seq2 (flag)=1; (data)=42; = %d\n", count_local.seq2);
+  printf("intlv(flag)=0; (data)=42; = %d\n", count_local.interleave);
+  printf("weak (flag)=1; (data)=0;  = %d\n", count_local.weak);
+  return 0;
 }

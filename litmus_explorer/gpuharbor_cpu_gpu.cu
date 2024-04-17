@@ -184,7 +184,7 @@ void run(Result *count_local){
     // init struct
     struct stress stress_params = {
         .testIterations = 10,
-        .testingWorkgroups = 2,
+        .testingWorkgroups = 1024,
         .maxWorkgroups = 1024,
         .workgroupSize = 1,
         .shufflePct = 0,
@@ -203,7 +203,7 @@ void run(Result *count_local){
         .permuteThread = 0
     };
     struct test test_params = {
-        .numOutputs=2,
+        .numOutputs=2,  // flag and data.
         .numMemLocations=1,
         .numResults=4,
         .permuteLocation=1031,
@@ -245,9 +245,9 @@ void run(Result *count_local){
     cudaMallocManaged(&testLocations, testLocSize*sizeof(atomic<int>));
     cudaMallocManaged(&readResults, test_params.numOutputs * testingThreads * sizeof(atomic<int>));
     cudaMallocManaged(&shuffledWorkgroups, stress_params.maxWorkgroups * sizeof(int));
-    cudaMallocManaged(&barrier, 1 * sizeof(int));
-    cudaMallocManaged(&scratchpad, stress_params.scratchMemorySize * sizeof(int));
-    cudaMallocManaged(&scratchLocations, stress_params.maxWorkgroups * sizeof(int));
+    // cudaMallocManaged(&barrier, 1 * sizeof(int));
+    // cudaMallocManaged(&scratchpad, stress_params.scratchMemorySize * sizeof(int));
+    // cudaMallocManaged(&scratchLocations, stress_params.maxWorkgroups * sizeof(int));
     cudaMallocManaged(&stressParams, 12 * sizeof(int));
     
     // Initialize
@@ -257,10 +257,10 @@ void run(Result *count_local){
     for (int i=0; i<12; i++){
       stressParams[i] = h_stressParams[i];
     }
-    barrier = 0;
-    for (int i=0; i< stress_params.scratchMemorySize; i++){
-      scratchpad[i] = 0;
-    }
+    // barrier = 0;
+    // for (int i=0; i< stress_params.scratchMemorySize; i++){
+    //   scratchpad[i] = 0;
+    // }
     // Copy data from host to device
    
 // ---------------------------------------------------------------
@@ -288,7 +288,7 @@ void run(Result *count_local){
     int numWorkgroups = setBetween(stress_params.testingWorkgroups, stress_params.maxWorkgroups);   // basically blocks
     int workGroupSize = stress_params.workgroupSize;    //1
     int* h_shuffledWorkgroups = (int *)malloc(numWorkgroups*sizeof(int));   // on cpu used for copying.
-    int* h_scratchLocations = (int *)malloc(numWorkgroups*sizeof(int));   // on cpu used for copying.
+    // int* h_scratchLocations = (int *)malloc(numWorkgroups*sizeof(int));   // on cpu used for copying.
     int BLOCKS = numWorkgroups; // 1024
     int THREADS= workGroupSize; // 1 
 
@@ -298,10 +298,10 @@ void run(Result *count_local){
     for(int i=0; i< numWorkgroups; i++){
       shuffledWorkgroups[i] = h_shuffledWorkgroups[i];
     }
-    setScratchLocations(h_scratchLocations, numWorkgroups, &stress_params);   // random indexes
-    for(int i=0; i< numWorkgroups; i++){
-      scratchLocations[i] = h_scratchLocations[i];
-    }
+    // setScratchLocations(h_scratchLocations, numWorkgroups, &stress_params);   // random indexes
+    // for(int i=0; i< numWorkgroups; i++){
+    //   scratchLocations[i] = h_scratchLocations[i];
+    // }
 
     ////////////////////////////////////////////
     accessData<<<BLOCKS, THREADS>>>(testLocations, readResults, shuffledWorkgroups, barrier, scratchpad, scratchLocations, stressParams, numWorkgroups, d_globalVar_weak, d_globalVar_seq1, d_globalVar_seq2,d_globalVar_interleave, d_else__);

@@ -14,12 +14,6 @@ __global__ void consumer(atomic<int>* flag, int* data, int* result0/*flag*/, int
 
     // while (flag->load(memory_order_acquire) == 0) {}
     *result0 = flag->load(memory_order_relaxed);
-
-        // // Busy-wait loop until the specified time has elapsed
-        // while ((clock() - start) * 1000 / CLOCKS_PER_SEC < 1000) {
-        //     // Do nothing, just wait
-        // }
-
     *result1 = *data;
 }
 

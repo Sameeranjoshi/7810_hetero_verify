@@ -172,9 +172,14 @@ void openmp_cpu_threads(int BLOCKS, int THREADS_PER_BLOCK, atomic<int> *test_loc
         int y_0 = p2 * stress_params[10] * 2 + stress_params[11];
         int x_1 = (id_1) * stress_params[10] * 2;
         int y_1 = p3 * stress_params[10] * 2 + stress_params[11];
-        printf("\nCPU blockidx=%d, blockdim=%d, threadidx=%d, data(W)=%d flag(W)=%d, data(R)=-, flag(R)=-, id_0=%d, id_1=%d", get_group_id, get_local_size, get_local_id, x_0, y_0, id_0, id_1); //  data(write and read)      
+        // printf("\nCPU blockidx=%d, blockdim=%d, threadidx=%d, data(W)=%d flag(W)=%d, data(R)=-, flag(R)=-, id_0=%d, id_1=%d", get_group_id, get_local_size, get_local_id, x_0, y_0, id_0, id_1); //  data(write and read)      
         test_locations[x_0].store(1, memory_order_relaxed); // data
         test_locations[y_0].store(1, memory_order_relaxed);  // flag
+        
+        int r0 = test_locations[y_1].load(memory_order_relaxed);  // flag
+        int r1 = test_locations[x_1].load(memory_order_relaxed);  // data
+        read_results[id_1 * 2 + 1].store(r1, memory_order_relaxed); // r1 = data
+        read_results[id_1 * 2].store(r0, memory_order_relaxed); // r0 = flag
       }
 
     }
@@ -203,9 +208,9 @@ __global__ void accessData(atomic<int> *test_locations, atomic<int> *read_result
     int y_0 = p2 * stress_params[10] * 2 + stress_params[11];
     int x_1 = (id_1) * stress_params[10] * 2;
     int y_1 = p3 * stress_params[10] * 2 + stress_params[11];
-    printf("\nGPU blockidx=%d, blockdim=%d, threadidx=%d, data(W)=- flag(W)=-, data(R)=%d, flag(R)=%d, id_0=%d, id_1=%d", get_group_id, get_local_size, get_local_id, x_1, y_1, id_0, id_1); //  data(write and read)
-    // test_locations[x_0].store(1, memory_order_relaxed); // data
-    // test_locations[y_0].store(1, memory_order_relaxed);  // flag
+    // printf("\nGPU blockidx=%d, blockdim=%d, threadidx=%d, data(W)=- flag(W)=-, data(R)=%d, flag(R)=%d, id_0=%d, id_1=%d", get_group_id, get_local_size, get_local_id, x_1, y_1, id_0, id_1); //  data(write and read)
+    test_locations[x_0].store(1, memory_order_relaxed); // data
+    test_locations[y_0].store(1, memory_order_relaxed);  // flag
     
     int r0 = test_locations[y_1].load(memory_order_relaxed);  // flag
     int r1 = test_locations[x_1].load(memory_order_relaxed);  // data
@@ -233,7 +238,7 @@ void run(Result *count_local){
     // init struct
     struct stress stress_params = {
         .testIterations = 1,
-        .testingWorkgroups = 2,
+        .testingWorkgroups = 1024,
         .maxWorkgroups = 1024,
         .workgroupSize = 1,
         .shufflePct = 0,
@@ -352,10 +357,13 @@ void run(Result *count_local){
     //   scratchLocations[i] = h_scratchLocations[i];
     // }
     
-    // Parallel CPU code(writer)
-    openmp_cpu_threads(BLOCKS, THREADS, testLocations, readResults, shuffledWorkgroups, barrier, scratchpad, scratchLocations, stressParams, numWorkgroups, d_globalVar_weak, d_globalVar_seq1, d_globalVar_seq2,d_globalVar_interleave, d_else__);
+
     ////////////////////////////////////////////
     accessData<<<BLOCKS, THREADS>>>(testLocations, readResults, shuffledWorkgroups, barrier, scratchpad, scratchLocations, stressParams, numWorkgroups, d_globalVar_weak, d_globalVar_seq1, d_globalVar_seq2,d_globalVar_interleave, d_else__);
+    // Parallel CPU code(writer)
+    // BLOCKS=1;
+    // THREADS=1;
+    openmp_cpu_threads(BLOCKS, THREADS, testLocations, readResults, shuffledWorkgroups, barrier, scratchpad, scratchLocations, stressParams, numWorkgroups, d_globalVar_weak, d_globalVar_seq1, d_globalVar_seq2,d_globalVar_interleave, d_else__);    
     ////////////////////////////////////////////
     // Synchronize to ensure kernel finishes before accessing data
     cudaDeviceSynchronize();

@@ -23,6 +23,7 @@ T(X) =(DATA, FLAG)
 using namespace cuda;
 #include <stdio.h>
 #include <time.h>
+#include <omp.h>
 
 struct Result{
 long int seq1, seq2, interleave, weak;
@@ -141,6 +142,31 @@ void useless(){
     // printf("\n stress_params[9] = %d", stress_params[9]);    
  }
 
+void openmp_cpu_threads(int BLOCKS, int THREADS_PER_BLOCK, atomic<int> *test_locations, atomic<int> *read_results, int *shuffled_workgroups, int* barrier, int* scratchpad, int* scratch_locations, int* stress_params, int numWorkgroups, int*globalVar_weak, int *globalVar_seq1, int *globalVar_seq2, int* globalVar_interleave, int *else__) {
+  int NUM_THREADS= BLOCKS*THREADS_PER_BLOCK;
+    #pragma omp parallel num_threads(NUM_THREADS)
+    {
+        // Equivalent calculations
+        int thread_id = omp_get_thread_num();
+        int block_index = thread_id / THREADS_PER_BLOCK;
+        int thread_index = thread_id % THREADS_PER_BLOCK;
+        int block_dim = THREADS_PER_BLOCK;
+        /////////////////////////////////////PORT/////////////////
+        // atomicAdd(else__, 1);
+        int get_group_id = block_index;
+        int get_local_size = block_dim;
+        int get_local_id = thread_index;
+
+        int shuffled_workgroup = shuffled_workgroups[get_group_id]; // blockIdx.x
+
+      if(shuffled_workgroup < stress_params[9]) { // 9 = testingWG
+        printf("\nCPU: blockidx=%d, blockdim=%d, threadidx=%d", block_index, block_dim, thread_index);
+      }
+
+    }
+}
+
+
 // Kernel function to access data on GPU by two threads
 __global__ void accessData(atomic<int> *test_locations, atomic<int> *read_results, int *shuffled_workgroups, int* barrier, int* scratchpad, int* scratch_locations, int* stress_params, int numWorkgroups, int*globalVar_weak, int *globalVar_seq1, int *globalVar_seq2, int* globalVar_interleave, int *else__) {
     atomicAdd(else__, 1);
@@ -150,7 +176,7 @@ __global__ void accessData(atomic<int> *test_locations, atomic<int> *read_result
 
     int shuffled_workgroup = shuffled_workgroups[get_group_id]; // blockIdx.x
 
-  if(shuffled_workgroup < stress_params[9]) {
+  if(shuffled_workgroup < stress_params[9]) { // 9 = testingWG
     int total_ids = get_local_size * stress_params[9];  // blockDim.x
     int id_0 = shuffled_workgroup * get_local_size + get_local_id; // get_local_id() = threadIdx.x  // global index of thread.
     // int new_workgroup = stripe_workgroup(shuffled_workgroup, get_local_id, stress_params[9]);
@@ -186,7 +212,7 @@ __global__ void accessData(atomic<int> *test_locations, atomic<int> *read_result
     }else{
       printf("\n r0=%d, r1=%d", r0, r1);
     }
-  }
+  }// if not stressing thread does its job.
 }
 
 void run(Result *count_local){
@@ -311,7 +337,9 @@ void run(Result *count_local){
     // for(int i=0; i< numWorkgroups; i++){
     //   scratchLocations[i] = h_scratchLocations[i];
     // }
-
+    
+    // Parallel CPU code(writer)
+    openmp_cpu_threads(BLOCKS, THREADS, testLocations, readResults, shuffledWorkgroups, barrier, scratchpad, scratchLocations, stressParams, numWorkgroups, d_globalVar_weak, d_globalVar_seq1, d_globalVar_seq2,d_globalVar_interleave, d_else__);
     ////////////////////////////////////////////
     accessData<<<BLOCKS, THREADS>>>(testLocations, readResults, shuffledWorkgroups, barrier, scratchpad, scratchLocations, stressParams, numWorkgroups, d_globalVar_weak, d_globalVar_seq1, d_globalVar_seq2,d_globalVar_interleave, d_else__);
     ////////////////////////////////////////////

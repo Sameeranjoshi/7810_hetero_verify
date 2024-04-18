@@ -11,6 +11,12 @@
 // RANDOM THREAD ID
 // THREAD SYNC 
 
+/*
+T(X) =(DATA, FLAG)
+  = W(2x%max, (2x+1)%max)
+  = R(2(x+1)%max, (2(x+1)+1)%max)
+*/
+
 #include <cuda/atomic>
 #include <cstdio>
 #include <cuda_runtime.h>
@@ -146,7 +152,7 @@ __global__ void accessData(atomic<int> *test_locations, atomic<int> *read_result
 
   if(shuffled_workgroup < stress_params[9]) {
     int total_ids = get_local_size * stress_params[9];  // blockDim.x
-    int id_0 = shuffled_workgroup * get_local_size + get_local_id; // get_local_id() = threadIdx.x
+    int id_0 = shuffled_workgroup * get_local_size + get_local_id; // get_local_id() = threadIdx.x  // global index of thread.
     // int new_workgroup = stripe_workgroup(shuffled_workgroup, get_local_id, stress_params[9]);
     int new_workgroup = (shuffled_workgroup + 1 + get_local_id %(stress_params[9] - 1)) % stress_params[9];
     int p1 = (get_local_id*stress_params[7]) % get_local_size;
@@ -157,7 +163,7 @@ __global__ void accessData(atomic<int> *test_locations, atomic<int> *read_result
     int y_0 = p2 * stress_params[10] * 2 + stress_params[11];
     int x_1 = (id_1) * stress_params[10] * 2;
     int y_1 = p3 * stress_params[10] * 2 + stress_params[11];
- 
+    printf("\n blockidx=%d, blockdim=%d, threadidx=%d, data(W)=%d flag(W)=%d, data(R)=%d, flag(R)=%d, id_0=%d, id_1=%d", get_group_id, get_local_size, get_local_id, x_0, y_0, x_1, y_1, id_0, id_1); //  data(write and read)
     test_locations[x_0].store(1, memory_order_relaxed); // data
     test_locations[y_0].store(1, memory_order_relaxed);  // flag
     
@@ -165,6 +171,9 @@ __global__ void accessData(atomic<int> *test_locations, atomic<int> *read_result
     int r1 = test_locations[x_1].load(memory_order_relaxed);  // data
     read_results[id_1 * 2 + 1].store(r1, memory_order_relaxed); // r1 = data
     read_results[id_1 * 2].store(r0, memory_order_relaxed); // r0 = flag
+
+    // compute using data-flag-data-flag-data-flag
+    // result using flag-data-flag-data-flag-data
     // id_capture[id_1*2] = r0;
     if (r0 == 1 && r1 == 0){
       atomicAdd(globalVar_weak, 1);
@@ -183,8 +192,8 @@ __global__ void accessData(atomic<int> *test_locations, atomic<int> *read_result
 void run(Result *count_local){
     // init struct
     struct stress stress_params = {
-        .testIterations = 10,
-        .testingWorkgroups = 1024,
+        .testIterations = 1,
+        .testingWorkgroups = 2,
         .maxWorkgroups = 1024,
         .workgroupSize = 1,
         .shufflePct = 0,
@@ -226,9 +235,8 @@ void run(Result *count_local){
                                 stress_params.memStride,
                                 (test_params.aliasedMemory == 1) ? 0 : stress_params.memStride
                                 };
-
-    int testingThreads = stress_params.workgroupSize * stress_params.testingWorkgroups;
-    int testLocSize = testingThreads * test_params.numMemLocations * stress_params.memStride;
+    int testingThreads = stress_params.workgroupSize * stress_params.testingWorkgroups; // 1025 = 1024+1(cputhread)
+    int testLocSize = testingThreads * test_params.numMemLocations * stress_params.memStride; // 1025 locations
 
     // pointers
     atomic<int>* testLocations;
@@ -286,6 +294,7 @@ void run(Result *count_local){
     
     // init sizes
     int numWorkgroups = setBetween(stress_params.testingWorkgroups, stress_params.maxWorkgroups);   // basically blocks
+    printf("\n stressing WG = %d\n Testing WG = %d", numWorkgroups - stress_params.testingWorkgroups, stress_params.testingWorkgroups);
     int workGroupSize = stress_params.workgroupSize;    //1
     int* h_shuffledWorkgroups = (int *)malloc(numWorkgroups*sizeof(int));   // on cpu used for copying.
     // int* h_scratchLocations = (int *)malloc(numWorkgroups*sizeof(int));   // on cpu used for copying.

@@ -160,7 +160,21 @@ void openmp_cpu_threads(int BLOCKS, int THREADS_PER_BLOCK, atomic<int> *test_loc
         int shuffled_workgroup = shuffled_workgroups[get_group_id]; // blockIdx.x
 
       if(shuffled_workgroup < stress_params[9]) { // 9 = testingWG
-        printf("\nCPU: blockidx=%d, blockdim=%d, threadidx=%d", block_index, block_dim, thread_index);
+        int total_ids = get_local_size * stress_params[9];  // blockDim.x
+        int id_0 = shuffled_workgroup * get_local_size + get_local_id; // get_local_id() = threadIdx.x  // global index of thread.
+        // int new_workgroup = stripe_workgroup(shuffled_workgroup, get_local_id, stress_params[9]);
+        int new_workgroup = (shuffled_workgroup + 1 + get_local_id %(stress_params[9] - 1)) % stress_params[9];
+        int p1 = (get_local_id*stress_params[7]) % get_local_size;
+        int id_1 = new_workgroup * get_local_size + p1; 
+        int p2 = (id_0 * stress_params[8]) % total_ids;
+        int p3 = (id_1 * stress_params[8]) % total_ids;
+        int x_0 = (id_0) * stress_params[10] * 2;
+        int y_0 = p2 * stress_params[10] * 2 + stress_params[11];
+        int x_1 = (id_1) * stress_params[10] * 2;
+        int y_1 = p3 * stress_params[10] * 2 + stress_params[11];
+        printf("\nCPU blockidx=%d, blockdim=%d, threadidx=%d, data(W)=%d flag(W)=%d, data(R)=-, flag(R)=-, id_0=%d, id_1=%d", get_group_id, get_local_size, get_local_id, x_0, y_0, id_0, id_1); //  data(write and read)      
+        test_locations[x_0].store(1, memory_order_relaxed); // data
+        test_locations[y_0].store(1, memory_order_relaxed);  // flag
       }
 
     }
@@ -189,9 +203,9 @@ __global__ void accessData(atomic<int> *test_locations, atomic<int> *read_result
     int y_0 = p2 * stress_params[10] * 2 + stress_params[11];
     int x_1 = (id_1) * stress_params[10] * 2;
     int y_1 = p3 * stress_params[10] * 2 + stress_params[11];
-    printf("\n blockidx=%d, blockdim=%d, threadidx=%d, data(W)=%d flag(W)=%d, data(R)=%d, flag(R)=%d, id_0=%d, id_1=%d", get_group_id, get_local_size, get_local_id, x_0, y_0, x_1, y_1, id_0, id_1); //  data(write and read)
-    test_locations[x_0].store(1, memory_order_relaxed); // data
-    test_locations[y_0].store(1, memory_order_relaxed);  // flag
+    printf("\nGPU blockidx=%d, blockdim=%d, threadidx=%d, data(W)=- flag(W)=-, data(R)=%d, flag(R)=%d, id_0=%d, id_1=%d", get_group_id, get_local_size, get_local_id, x_1, y_1, id_0, id_1); //  data(write and read)
+    // test_locations[x_0].store(1, memory_order_relaxed); // data
+    // test_locations[y_0].store(1, memory_order_relaxed);  // flag
     
     int r0 = test_locations[y_1].load(memory_order_relaxed);  // flag
     int r1 = test_locations[x_1].load(memory_order_relaxed);  // data

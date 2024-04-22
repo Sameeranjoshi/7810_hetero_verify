@@ -237,7 +237,7 @@ __global__ void accessData(atomic<int> *test_locations, atomic<int> *read_result
 void run(Result *count_local){
     // init struct
     struct stress stress_params = {
-        .testIterations = 1,
+        .testIterations = 100,
         .testingWorkgroups = 1024,
         .maxWorkgroups = 1024,
         .workgroupSize = 2,
